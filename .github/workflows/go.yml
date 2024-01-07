@@ -23,5 +23,3 @@ jobs:
 
     - name: Test
       run: go test -v ./...
-    - name: Fail
-      run: ls 78
