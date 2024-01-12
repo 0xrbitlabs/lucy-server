@@ -10,10 +10,11 @@ create table users (
   phone_number text not null unique,
   password text not null,
   verified boolean not null default false,
-  full_name text not null,
+  name text not null,
   profile_picture text not null default 'https://picsum.photos/200/300',
   description text not null,
-  location text not null
+  country text not null,
+  town text not null
 );
 
 create table categories (
