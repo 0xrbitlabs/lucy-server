@@ -37,3 +37,15 @@ func (u *Users) Insert(user *types.User) error {
 	}
 	return nil
 }
+
+func (u *Users) CountByPhoneNumber(phoneNumber string) (int, error) {
+	count := 0
+	err := u.db.QueryRowx(
+		"select count(*) from users where phone_number=$1",
+		phoneNumber,
+	).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("Error while counting phone numbers: %w", err)
+	}
+	return count, nil
+}

@@ -37,8 +37,8 @@ create table products (
 
 create table verification_codes (
   id text not null primary key,
-  user_id text not null references users(id),
   code text not null,
+  sent_to text not null,
   sent_at timestamp not null,
   used boolean not null default false
 );
