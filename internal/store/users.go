@@ -19,8 +19,16 @@ func NewUsers(db *sqlx.DB) *Users {
 func (u *Users) Insert(user *types.User) error {
 	_, err := u.db.NamedExec(
 		`
-      insert into users(id, phone_number, full_name, profile_picture)
-      values(:id, :phone_number, :full_name, :profile_picture)
+      insert into users (
+        id, user_type, phone_number, password,
+        verified, name, profile_picture,
+        description, country, town
+      )
+      values (
+        :id, :user_type, :phone_number, :password,
+        :verified, :name, :profile_picture,
+        :description, :country, :town
+      )
     `,
 		user,
 	)
