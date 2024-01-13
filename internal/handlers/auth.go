@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -85,8 +86,61 @@ func (h *AuthHandler) VerifyPhoneNumber(w http.ResponseWriter, r *http.Request) 
 	return
 }
 
-func (h *AuthHandler) Register() {
-
+func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	payload := new(struct {
+		PhoneNumber       string `json:"phone_number"`
+		Password          string `json:"password"`
+		Name              string `json:"name"`
+		ProfilePicture    string `json:"profile_picture"`
+		Description       string `json:"description"`
+		Country           string `json:"country"`
+		Town              string `json:"town"`
+		VerificationProof string `json:"verification_proof"`
+	})
+	err := json.NewDecoder(r.Body).Decode(payload)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while decoding request body: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	verifiedNumber, err := h.otpCodes.Get(payload.VerificationProof)
+	if err != nil {
+		if errors.Is(err, types.ErrCodeNotFound) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+	}
+	if verifiedNumber != payload.PhoneNumber {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	hashedPassword, err := utils.Hash(payload.Password)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	newUser := &types.User{
+		Id:             ulid.Make().String(),
+		PhoneNumber:    payload.PhoneNumber,
+		Password:       hashedPassword,
+		Name:           payload.Name,
+		Description:    payload.Description,
+		ProfilePicture: payload.ProfilePicture,
+		Country:        payload.Country,
+		Town:           payload.Town,
+		UserType:       "seller",
+	}
+	err = h.users.Insert(newUser)
+	if err != nil {
+		if errors.Is(err, types.ErrUniqueViolation) {
+			h.logger.Debug("A unique constraint violation occured")
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+	}
+	w.WriteHeader(http.StatusCreated)
+	return
 }
 
 func (h *AuthHandler) Login() {

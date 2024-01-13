@@ -9,7 +9,6 @@ create table users (
   user_type text not null default 'seller',
   phone_number text not null unique,
   password text not null,
-  verified boolean not null default false,
   name text not null,
   profile_picture text not null default 'https://picsum.photos/200/300',
   description text not null,

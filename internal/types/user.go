@@ -5,7 +5,6 @@ type User struct {
 	UserType       string `json:"user_type" db:"user_type"`
 	PhoneNumber    string `json:"phone_number" db:"phone_number"`
 	Password       string `json:"passord" db:"passord"`
-	Verified       bool   `json:"verified" db:"verified"`
 	Name           string `json:"full_name" db:"full_name"`
 	ProfilePicture string `json:"profile_picture" db:"profile_picture"`
 	Description    string `json:"descriptiton" db:"descriptiton"`

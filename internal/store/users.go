@@ -2,8 +2,10 @@ package store
 
 import (
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"server/internal/types"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type Users struct {
@@ -21,18 +23,23 @@ func (u *Users) Insert(user *types.User) error {
 		`
       insert into users (
         id, user_type, phone_number, password,
-        verified, name, profile_picture,
+        name, profile_picture,
         description, country, town
       )
       values (
         :id, :user_type, :phone_number, :password,
-        :verified, :name, :profile_picture,
+        :name, :profile_picture,
         :description, :country, :town
       )
     `,
 		user,
 	)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			if pqErr.Code.Name() == "unique_violation" {
+				return types.ErrUniqueViolation
+			}
+		}
 		return fmt.Errorf("Failed to insert new user: %w", err)
 	}
 	return nil
