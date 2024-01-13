@@ -4,26 +4,27 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/oklog/ulid/v2"
 	"log/slog"
 	"net/http"
 	"server/internal/store"
 	"server/internal/types"
 	"server/internal/utils"
 	"time"
-
-	"github.com/oklog/ulid/v2"
 )
 
 type AuthHandler struct {
 	otpCodes *store.OTPCodes
 	users    *store.Users
+	sessions *store.Sessions
 	logger   *slog.Logger
 }
 
-func NewAuthHandler(otpCodes *store.OTPCodes, users *store.Users, logger *slog.Logger) *AuthHandler {
+func NewAuthHandler(otpCodes *store.OTPCodes, users *store.Users, sessions *store.Sessions, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
 		otpCodes: otpCodes,
 		users:    users,
+		sessions: sessions,
 		logger:   logger,
 	}
 }
@@ -153,7 +154,25 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	sessionId := ulid.Make().String()
+	err = h.sessions.Create(sessionId, newUser.Id)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	data, err := json.Marshal(map[string]interface{}{
+		"data": map[string]string{
+			"session": sessionId,
+		},
+	})
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while marshalling data: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
+	w.Write(data)
 	return
 }
 

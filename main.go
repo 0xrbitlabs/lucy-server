@@ -24,8 +24,9 @@ func main() {
 	redisClient := database.RedisClient()
 	users := store.NewUsers(postgresPool)
 	otpCodes := store.NewOTPCodes(redisClient)
+	sessions := store.NewSessionsStore(redisClient)
 	userHandler := handlers.NewUserHandler(users, logger)
-	authHandler := handlers.NewAuthHandler(otpCodes, users, logger)
+	authHandler := handlers.NewAuthHandler(otpCodes, users, sessions, logger)
 	r := chi.NewRouter()
 
 	r.Route("/auth", func(r chi.Router) {
