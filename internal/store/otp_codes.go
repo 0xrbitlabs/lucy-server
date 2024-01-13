@@ -54,7 +54,7 @@ func (oc *OTPCodes) SetVerificationProof(verifiedNumber, proofId string) error {
 		time.Minute*5,
 	).Err()
 	if err != nil {
-		return fmt.Errorf("Error while setting verification prooof: %w", err)
+		return fmt.Errorf("Error while setting verification proof: %w", err)
 	}
 	return nil
 }

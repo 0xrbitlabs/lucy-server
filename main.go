@@ -31,6 +31,7 @@ func main() {
 	r.Route("/auth", func(r chi.Router) {
 		r.Route("/verification", func(r chi.Router) {
 			r.Get("/request", authHandler.RequestVerificationCode)
+			r.Get("/confirm", authHandler.VerifyPhoneNumber)
 		})
 
 		r.Post("/register", userHandler.CreateAccount)

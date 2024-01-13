@@ -25,7 +25,6 @@ func SendMessage(receiver, message string) error {
 	if err != nil {
 		return fmt.Errorf("Error while sending HTTP request: %w", err)
 	}
-  fmt.Println(resp.Status)
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Error while sending SMS: Wanted HTTP 200 but got %s", resp.Status)
 	}
