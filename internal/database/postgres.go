@@ -7,7 +7,7 @@ import (
 )
 
 func NewPostgresPool() *sqlx.DB {
-	db, err := sqlx.Connect("postgres", os.Getenv("PG_URL"))
+	db, err := sqlx.Connect("postgres", os.Getenv("POSTGRES_URL"))
 	if err != nil {
 		panic(err)
 	}
