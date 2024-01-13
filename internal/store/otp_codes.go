@@ -19,10 +19,10 @@ func NewOTPCodes(redis *redis.Client) *OTPCodes {
 	}
 }
 
-func (oc *OTPCodes) Set(code, sent_to string) error {
+func (oc *OTPCodes) Set(codeKey string) error {
 	err := oc.redis.SetEx(
 		context.Background(),
-		fmt.Sprintf("%s:%s", code, sent_to),
+		codeKey,
 		"",
 		time.Minute*5,
 	).Err()
@@ -32,10 +32,10 @@ func (oc *OTPCodes) Set(code, sent_to string) error {
 	return nil
 }
 
-func (oc *OTPCodes) Get(code, sent_to string) (string, error) {
+func (oc *OTPCodes) Get(codeKey string) (string, error) {
 	value, err := oc.redis.Get(
 		context.Background(),
-		fmt.Sprintf("%s:%s", code, sent_to),
+		codeKey,
 	).Result()
 	if err != nil {
 		if err == redis.Nil {
@@ -46,10 +46,34 @@ func (oc *OTPCodes) Get(code, sent_to string) (string, error) {
 	return value, nil
 }
 
-func (oc *OTPCodes) Delete(code, sent_to string) error {
+func (oc *OTPCodes) SetVerificationProof(verifiedNumber, proofId string) error {
+	err := oc.redis.SetEx(
+		context.Background(),
+		proofId,
+		verifiedNumber,
+		time.Minute*5,
+	).Err()
+	if err != nil {
+		return fmt.Errorf("Error while setting verification prooof: %w", err)
+	}
+	return nil
+}
+
+func (oc *OTPCodes) DeleteVerificationProof(proofId string) error {
 	err := oc.redis.Del(
 		context.Background(),
-		fmt.Sprintf("%s:%s", code, sent_to),
+		proofId,
+	).Err()
+	if err != nil {
+		return fmt.Errorf("Error while deleting verification proof: %w", err)
+	}
+	return nil
+}
+
+func (oc *OTPCodes) Delete(key string) error {
+	err := oc.redis.Del(
+		context.Background(),
+		key,
 	).Err()
 	if err != nil {
 		return fmt.Errorf("Error while deleting OTP code: %w", err)
