@@ -9,3 +9,4 @@ go.work
 server
 main
 .env
+tmp/
