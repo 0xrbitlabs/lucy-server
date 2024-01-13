@@ -13,16 +13,26 @@ import (
 )
 
 type UserHandler struct {
-	users  *store.Users
-	logger *slog.Logger
-	jwt    *jwtauth.JWTAuth
+	users             *store.Users
+	verificationCodes *store.VerificationCodes
+	logger            *slog.Logger
+	jwt               *jwtauth.JWTAuth
 }
 
-func NewUserHandler(users *store.Users, logger *slog.Logger, jwt *jwtauth.JWTAuth) *UserHandler {
+func NewUserHandler(users *store.Users, verificationCodes *store.VerificationCodes, logger *slog.Logger, jwt *jwtauth.JWTAuth) *UserHandler {
 	return &UserHandler{
-		users:  users,
-		logger: logger,
-		jwt:    jwt,
+		users:             users,
+		verificationCodes: verificationCodes,
+		logger:            logger,
+		jwt:               jwt,
+	}
+}
+
+func (h *UserHandler) RequestVerificationCode(w http.ResponseWriter, r *http.Request) {
+	phone_number := r.URL.Query().Get("phone")
+	if phone_number == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 }
 
@@ -97,6 +107,6 @@ func (h *UserHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-  w.Write(data)
+	w.Write(data)
 	return
 }
