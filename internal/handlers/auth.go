@@ -82,7 +82,18 @@ func (h *AuthHandler) VerifyPhoneNumber(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		h.logger.Debug(err.Error())
 	}
+	data, err := json.Marshal(map[string]interface{}{
+		"data": map[string]string{
+			"proof": verificationProofId,
+		},
+	})
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while marshalling data: %s", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
+	w.Write(data)
 	return
 }
 
@@ -138,6 +149,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusConflict)
 			return
 		}
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusCreated)
 	return

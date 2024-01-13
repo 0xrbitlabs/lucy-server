@@ -19,6 +19,7 @@ func NewUsers(db *sqlx.DB) *Users {
 }
 
 func (u *Users) Insert(user *types.User) error {
+  fmt.Println("came here")
 	_, err := u.db.NamedExec(
 		`
       insert into users (

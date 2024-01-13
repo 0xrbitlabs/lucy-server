@@ -34,7 +34,8 @@ func main() {
 			r.Get("/confirm", authHandler.VerifyPhoneNumber)
 		})
 
-		r.Post("/register", userHandler.CreateAccount)
+		r.Post("/register", authHandler.Register)
+		r.Patch("/user", userHandler.CreateAccount)
 	})
 	fmt.Println("Server launched on port 8081")
 	err = http.ListenAndServe(":8081", r)
