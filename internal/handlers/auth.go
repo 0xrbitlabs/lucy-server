@@ -43,8 +43,7 @@ func (h *AuthHandler) RequestVerificationCode(w http.ResponseWriter, r *http.Req
 		h.logger.Error(err.Error())
 		return
 	}
-	codeKey := fmt.Sprintf("%s:%s", otpCode, phoneNumber)
-	err = h.otpCodes.Set(codeKey)
+	err = h.otpCodes.Set(otpCode, phoneNumber)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -61,8 +60,7 @@ func (h *AuthHandler) VerifyPhoneNumber(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	codeKey := fmt.Sprintf("%s:%s", code, phoneNumber)
-	_, err := h.otpCodes.Get(codeKey)
+	otpCode, err := h.otpCodes.Get(phoneNumber)
 	if err != nil {
 		if errors.Is(err, types.ErrCodeNotFound) {
 			w.WriteHeader(http.StatusBadRequest)
@@ -72,6 +70,10 @@ func (h *AuthHandler) VerifyPhoneNumber(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	if code != otpCode {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	verificationProofId := ulid.Make().String()
 	err = h.otpCodes.SetVerificationProof(phoneNumber, verificationProofId)
 	if err != nil {
@@ -79,7 +81,7 @@ func (h *AuthHandler) VerifyPhoneNumber(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = h.otpCodes.Delete(codeKey)
+	err = h.otpCodes.Delete(phoneNumber)
 	if err != nil {
 		h.logger.Debug(err.Error())
 	}

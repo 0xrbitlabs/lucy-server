@@ -19,11 +19,11 @@ func NewOTPCodes(redis *redis.Client) *OTPCodes {
 	}
 }
 
-func (oc *OTPCodes) Set(codeKey string) error {
+func (oc *OTPCodes) Set(code, phoneNumber string) error {
 	err := oc.redis.SetEx(
 		context.Background(),
-		codeKey,
-		"",
+		phoneNumber,
+		code,
 		time.Minute*5,
 	).Err()
 	if err != nil {
