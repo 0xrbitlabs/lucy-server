@@ -25,7 +25,6 @@ func main() {
 	users := store.NewUsers(postgresPool)
 	otpCodes := store.NewOTPCodes(redisClient)
 	sessions := store.NewSessionsStore(redisClient)
-	userHandler := handlers.NewUserHandler(users, logger)
 	authHandler := handlers.NewAuthHandler(otpCodes, users, sessions, logger)
 	r := chi.NewRouter()
 
@@ -36,7 +35,6 @@ func main() {
 		})
 
 		r.Post("/register", authHandler.Register)
-		r.Patch("/user", userHandler.CreateAccount)
 	})
 	fmt.Println("Server launched on port 8081")
 	err = http.ListenAndServe(":8081", r)

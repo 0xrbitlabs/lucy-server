@@ -2,10 +2,9 @@ package store
 
 import (
 	"fmt"
-	"server/internal/types"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"server/internal/types"
 )
 
 type Users struct {
@@ -19,7 +18,6 @@ func NewUsers(db *sqlx.DB) *Users {
 }
 
 func (u *Users) Insert(user *types.User) error {
-  fmt.Println("came here")
 	_, err := u.db.NamedExec(
 		`
       insert into users (

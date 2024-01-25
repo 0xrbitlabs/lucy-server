@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"log/slog"
-	"net/http"
 	"server/internal/store"
 )
 
@@ -16,7 +15,4 @@ func NewUserHandler(users *store.Users, logger *slog.Logger) *UserHandler {
 		users:  users,
 		logger: logger,
 	}
-}
-
-func (h *UserHandler) CreateAccount(w http.ResponseWriter, r *http.Request) {
 }

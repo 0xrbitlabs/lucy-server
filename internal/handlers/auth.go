@@ -177,11 +177,3 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 	return
 }
-
-func (h *AuthHandler) Login() {
-
-}
-
-func (h *AuthHandler) Logout() {
-
-}
