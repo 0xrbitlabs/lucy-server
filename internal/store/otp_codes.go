@@ -3,10 +3,9 @@ package store
 import (
 	"context"
 	"fmt"
+	"github.com/redis/go-redis/v9"
 	"server/internal/types"
 	"time"
-
-	"github.com/redis/go-redis/v9"
 )
 
 type OTPCodes struct {
