@@ -13,11 +13,14 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		fmt.Println("Failed to read env var file")
-		panic(err)
-	}
+  env := os.Getenv("ENV")
+  if env != "PROD"{
+    err := godotenv.Load()
+    if err != nil {
+      fmt.Println("Failed to read env var file")
+      panic(err)
+    }
+  }
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	logger := slog.New(textHandler)
 	postgresPool := database.NewPostgresPool()
@@ -37,7 +40,7 @@ func main() {
 		r.Post("/register", authHandler.Register)
 	})
 	fmt.Println("Server launched on port 8081")
-	err = http.ListenAndServe(":8081", r)
+  err := http.ListenAndServe(":8081", r)
 	if err != nil {
 		panic(err)
 	}
