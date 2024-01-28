@@ -10,94 +10,20 @@ import (
 	"server/internal/store"
 	"server/internal/types"
 	"server/internal/utils"
-	"time"
 )
 
 type AuthHandler struct {
-	otpCodes *store.OTPCodes
 	users    *store.Users
 	sessions *store.Sessions
 	logger   *slog.Logger
 }
 
-func NewAuthHandler(otpCodes *store.OTPCodes, users *store.Users, sessions *store.Sessions, logger *slog.Logger) *AuthHandler {
+func NewAuthHandler(users *store.Users, sessions *store.Sessions, logger *slog.Logger) *AuthHandler {
 	return &AuthHandler{
-		otpCodes: otpCodes,
 		users:    users,
 		sessions: sessions,
 		logger:   logger,
 	}
-}
-
-func (h *AuthHandler) RequestVerificationCode(w http.ResponseWriter, r *http.Request) {
-	phoneNumber := r.URL.Query().Get("phone_number")
-	if phoneNumber == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	otpCode := fmt.Sprint(time.Now().Nanosecond())[:6]
-	otpMessage := fmt.Sprintf("Votre code verification est %s", otpCode)
-	err := utils.SendMessage(phoneNumber, otpMessage)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		h.logger.Error(err.Error())
-		return
-	}
-	err = h.otpCodes.Set(otpCode, phoneNumber)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	return
-}
-
-func (h *AuthHandler) VerifyPhoneNumber(w http.ResponseWriter, r *http.Request) {
-	phoneNumber := r.URL.Query().Get("phone_number")
-	code := r.URL.Query().Get("code")
-	if phoneNumber == "" || code == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	otpCode, err := h.otpCodes.Get(phoneNumber)
-	if err != nil {
-		if errors.Is(err, types.ErrCodeNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	if code != otpCode {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	verificationProofId := ulid.Make().String()
-	err = h.otpCodes.SetVerificationProof(phoneNumber, verificationProofId)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	err = h.otpCodes.Delete(phoneNumber)
-	if err != nil {
-		h.logger.Debug(err.Error())
-	}
-	data, err := json.Marshal(map[string]interface{}{
-		"data": map[string]string{
-			"proof": verificationProofId,
-		},
-	})
-	if err != nil {
-		h.logger.Error(fmt.Sprintf("Error while marshalling data: %s", err.Error()))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
-	return
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -115,17 +41,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.logger.Error(fmt.Sprintf("Error while decoding request body: %s", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	verifiedNumber, err := h.otpCodes.Get(payload.VerificationProof)
-	if err != nil {
-		if errors.Is(err, types.ErrCodeNotFound) {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-	}
-	if verifiedNumber != payload.PhoneNumber {
-		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	hashedPassword, err := utils.Hash(payload.Password)
