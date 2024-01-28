@@ -26,14 +26,15 @@ func main() {
 	postgresPool := database.NewPostgresPool()
 	redisClient := database.RedisClient()
 	users := store.NewUsers(postgresPool)
-	otpCodes := store.NewOTPCodes(redisClient)
 	sessions := store.NewSessionsStore(redisClient)
-	authHandler := handlers.NewAuthHandler(otpCodes, users, sessions, logger)
+	authHandler := handlers.NewAuthHandler(users, sessions, logger)
   webhookHandler := handlers.NewWebhookHandler()
 	r := chi.NewRouter()
 
-  r.Get("/hook", webhookHandler.Verify)
-  r.Post("/hook", webhookHandler.Handle)
+  r.Route("/hook", func(r chi.Router) {
+    r.Get("/", webhookHandler.Verify)
+    r.Post("/", webhookHandler.Handle)
+  })
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
