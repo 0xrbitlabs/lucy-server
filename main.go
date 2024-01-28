@@ -29,14 +29,13 @@ func main() {
 	otpCodes := store.NewOTPCodes(redisClient)
 	sessions := store.NewSessionsStore(redisClient)
 	authHandler := handlers.NewAuthHandler(otpCodes, users, sessions, logger)
+  webhookHandler := handlers.NewWebhookHandler()
 	r := chi.NewRouter()
 
-	r.Route("/auth", func(r chi.Router) {
-		r.Route("/verification", func(r chi.Router) {
-			r.Get("/request", authHandler.RequestVerificationCode)
-			r.Get("/confirm", authHandler.VerifyPhoneNumber)
-		})
+  r.Get("/hook", webhookHandler.Verify)
+  r.Post("/hook", webhookHandler.Handle)
 
+	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.Register)
 	})
 	fmt.Println("Server launched on port 8081")
