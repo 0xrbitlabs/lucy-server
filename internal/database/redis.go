@@ -1,6 +1,7 @@
 package database
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"github.com/redis/go-redis/v9"
@@ -18,5 +19,11 @@ func RedisClient() *redis.Client {
 		os.Exit(1)
 	}
 	client := redis.NewClient(opts)
+	err = client.Ping(context.Background()).Err()
+	if err != nil {
+		fmt.Printf("Error while pinging redis: %v", err)
+		os.Exit(1)
+	}
+  fmt.Println("Connected to Redis")
 	return client
 }
