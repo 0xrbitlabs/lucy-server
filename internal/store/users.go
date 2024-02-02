@@ -22,12 +22,12 @@ func (u *Users) Insert(user *types.User) error {
 		`
       insert into users (
         id, user_type, phone_number, password,
-        name, profile_picture,
+        name,
         description, country, town
       )
       values (
         :id, :user_type, :phone_number, :password,
-        :name, :profile_picture,
+        :name,
         :description, :country, :town
       )
     `,
