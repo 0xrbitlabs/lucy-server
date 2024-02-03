@@ -60,4 +60,63 @@ func SendMessageSingle(to, content string) error {
 	return nil
 }
 
-func SendTemplateMessage(template, to, language string) {}
+func SendTemplateMessage(template, to, language string) error {
+	reqBody, err := json.Marshal(struct {
+		MessagingProduct string `json:"messaging_product"`
+		RecipientType    string `json:"recipient_type"`
+		To               string `json:"to"`
+		Type             string `json:"type"`
+		Template         struct {
+			Name     string `json:"name"`
+			Language struct {
+				Code string `json:"code"`
+			} `json:"language"`
+		} `json:"template"`
+	}{
+		MessagingProduct: "whatsapp",
+		RecipientType:    "individual",
+		To:               to,
+		Type:             "template",
+		Template: struct {
+			Name     string "json:\"name\""
+			Language struct {
+				Code string "json:\"code\""
+			} "json:\"language\""
+		}{
+			Name: template,
+			Language: struct {
+				Code string "json:\"code\""
+			}{
+				Code: "fr",
+			},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("Error while marshalling request body: %w", err)
+	}
+	url := fmt.Sprintf("https://graph.facebook.com/v18.0/%s/messages", os.Getenv("PHONE_NUMBER_ID"))
+	req, err := http.NewRequest(
+		"POST",
+		url,
+		bytes.NewBuffer(reqBody),
+	)
+	if err != nil {
+		return fmt.Errorf("Error while constructing request: %w", err)
+	}
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("META_TOKEN")))
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("Error while sending request: %w", err)
+	}
+	status := resp.StatusCode
+	if status != 200 {
+		responseData, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Error while reading request body: %w", err)
+		}
+		return fmt.Errorf("Error while sending template message, wanted HTTP 200 but got HTTP %d with error message: %s", status, string(responseData))
+	}
+	return nil
+}

@@ -8,8 +8,6 @@ import (
 	"os"
 	"server/internal/store"
 	"server/internal/types"
-	"server/internal/utils"
-	"github.com/oklog/ulid/v2"
 )
 
 type WebhookHandler struct {
@@ -54,53 +52,21 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	messages := payload.Entry[0].Changes[0].Value.Messages
 	if len(messages) == 0 {
-		h.logger.Debug("Not a message sent webhook")
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-	messageType := messages[0].Type
-	if messageType != "text" {
-		h.logger.Debug("Received non 'Text message received' webhook")
+		h.logger.Debug("Not interested in handling webhook")
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 	message := messages[0]
 	userContactInfo := payload.Entry[0].Changes[0].Value.Contacts[0]
-	userPhone := message.From
-	count, err := h.users.CountByPhoneNumber(userPhone)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusOK)
+	if message.Type == "button" {
+		h.HandleButtonReplyEvent()
 		return
 	}
-	if count == 0 {
-		//User is a new user
-		newUser := &types.User{
-			Id:          ulid.Make().String(),
-			UserType:    "regular",
-			PhoneNumber: userPhone,
-			Password:    "",
-			Name:        userContactInfo.Profile.Name,
-			Description: "",
-			Country:     "",
-			Town:        "",
-		}
-		err := h.users.Insert(newUser)
-		if err != nil {
-			h.logger.Error(err.Error())
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		//Send back welcome message
-		w.WriteHeader(http.StatusOK)
+	if message.Type == "text" {
+		h.HandleTextEvent(w, userContactInfo, message)
 		return
 	}
-	err = utils.SendMessageSingle(userPhone, message.Text.Body)
-	if err != nil {
-		h.logger.Error(err.Error())
-		w.WriteHeader(http.StatusOK)
-		return
-	}
+	h.logger.Debug("Not interested in handling received webhook")
 	w.WriteHeader(http.StatusOK)
 	return
 }
