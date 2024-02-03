@@ -31,7 +31,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		PhoneNumber       string `json:"phone_number"`
 		Password          string `json:"password"`
 		Name              string `json:"name"`
-		ProfilePicture    string `json:"profile_picture"`
 		Description       string `json:"description"`
 		Country           string `json:"country"`
 		Town              string `json:"town"`
@@ -55,7 +54,6 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		Password:       hashedPassword,
 		Name:           payload.Name,
 		Description:    payload.Description,
-		ProfilePicture: payload.ProfilePicture,
 		Country:        payload.Country,
 		Town:           payload.Town,
 		UserType:       "seller",

@@ -6,7 +6,6 @@ type User struct {
 	PhoneNumber    string `json:"phone_number" db:"phone_number"`
 	Password       string `json:"passord" db:"password"`
 	Name           string `json:"name" db:"name"`
-	ProfilePicture string `json:"profile_picture" db:"profile_picture"`
 	Description    string `json:"description" db:"description"`
 	Country        string `json:"country" db:"country"`
 	Town           string `json:"town" db:"town"`

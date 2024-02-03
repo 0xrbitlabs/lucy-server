@@ -27,8 +27,9 @@ func main() {
 	redisClient := database.RedisClient()
 	users := store.NewUsers(postgresPool)
 	sessions := store.NewSessionsStore(redisClient)
+  codes := store.NewVerificationCodesStore(redisClient)
 	authHandler := handlers.NewAuthHandler(users, sessions, logger)
-  webhookHandler := handlers.NewWebhookHandler()
+  webhookHandler := handlers.NewWebhookHandler(users, logger, codes)
 	r := chi.NewRouter()
 
   r.Route("/hook", func(r chi.Router) {

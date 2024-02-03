@@ -1,15 +1,27 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
+	"server/internal/store"
+	"server/internal/types"
 )
 
 type WebhookHandler struct {
+	users  *store.Users
+	logger *slog.Logger
+	codes  *store.VerificationCodes
 }
 
-func NewWebhookHandler() *WebhookHandler {
-	return &WebhookHandler{}
+func NewWebhookHandler(users *store.Users, logger *slog.Logger, codes *store.VerificationCodes) *WebhookHandler {
+	return &WebhookHandler{
+		users:  users,
+		logger: logger,
+		codes:  codes,
+	}
 }
 
 func (h *WebhookHandler) Verify(w http.ResponseWriter, r *http.Request) {
@@ -28,5 +40,40 @@ func (h *WebhookHandler) Verify(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
-
+	payload := new(types.WebhookMessage)
+	err := json.NewDecoder(r.Body).Decode(payload)
+	if err != nil {
+		h.logger.Error(fmt.Sprintf("Error while decoding payload: %s", err.Error()))
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	if len(payload.Entry) == 0 {
+		h.logger.Debug("Received empty webhook message")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	messages := payload.Entry[0].Changes[0].Value.Messages
+	if len(messages) == 0 {
+		h.logger.Debug("Not interested in handling webhook")
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	message := messages[0]
+	userContactInfo := payload.Entry[0].Changes[0].Value.Contacts[0]
+  userPhone := message.From
+	if message.Type == "button" {
+		replyData := payload.Entry[0].Changes[0].Value.Messages[0].Button
+		if replyData.Text == "Proposer mes produits" {
+			h.HandleRegistrationRequest(w, userContactInfo, userPhone)
+			return
+		}
+		return
+	}
+	if message.Type == "text" {
+		h.HandleTextEvent(w, userContactInfo, message)
+		return
+	}
+	h.logger.Debug("Not interested in handling received webhook")
+	w.WriteHeader(http.StatusOK)
+	return
 }

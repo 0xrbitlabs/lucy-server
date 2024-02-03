@@ -1,10 +1,12 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
+	"server/internal/types"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"server/internal/types"
 )
 
 type Users struct {
@@ -22,12 +24,12 @@ func (u *Users) Insert(user *types.User) error {
 		`
       insert into users (
         id, user_type, phone_number, password,
-        name, profile_picture,
+        name,
         description, country, town
       )
       values (
         :id, :user_type, :phone_number, :password,
-        :name, :profile_picture,
+        :name,
         :description, :country, :town
       )
     `,
@@ -54,4 +56,20 @@ func (u *Users) CountByPhoneNumber(phoneNumber string) (int, error) {
 		return 0, fmt.Errorf("Error while counting phone numbers: %w", err)
 	}
 	return count, nil
+}
+
+func (u *Users) GetByPhoneNumber(phoneNumber string) (*types.User, error) {
+	dbUser := new(types.User)
+	err := u.db.Get(
+		dbUser,
+		"select * from users where phone_number=$1",
+		phoneNumber,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, types.ErrUserNotFound
+		}
+		return nil, fmt.Errorf("Error while retrieving user: %w", err)
+	}
+	return dbUser, nil
 }
