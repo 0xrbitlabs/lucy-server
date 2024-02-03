@@ -84,15 +84,10 @@ func (h *WebhookHandler) HandleRegistrationRequest(w http.ResponseWriter, userCo
 		return
 	}
 	userRegistrationURL := fmt.Sprintf("%s/register?auth_code=%s", os.Getenv("WEB_APP_URL"), code)
-	message := fmt.Sprintf(
-    "Veuillez vous connecter sur notre plateforme pour terminer votre enregistrement en tant que vendeur en suivant ce lien [%s](%s)", 
-    userRegistrationURL, 
-    userRegistrationURL,
-  )
-	err = utils.SendMessageSingle(userPhone, message)
+	err = utils.SendRegistrationConfirmationMessage(userPhone, userRegistrationURL)
 	if err != nil {
-		_ = utils.SendErrorMessage(userPhone, h.logger)
 		h.logger.Error(err.Error())
+		_ = utils.SendErrorMessage(userPhone, h.logger)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
