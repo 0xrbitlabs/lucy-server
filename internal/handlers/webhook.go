@@ -8,6 +8,7 @@ import (
 	"os"
 	"server/internal/store"
 	"server/internal/types"
+	"server/internal/utils"
 	"github.com/oklog/ulid/v2"
 )
 
@@ -86,7 +87,7 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		}
 		err := h.users.Insert(newUser)
 		if err != nil {
-      h.logger.Error(err.Error())
+			h.logger.Error(err.Error())
 			w.WriteHeader(http.StatusOK)
 			return
 		}
@@ -94,7 +95,13 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	fmt.Printf("%s\n", message.Text)
+	statusCode, err := utils.SendMessageSingle(userPhone, message.Text.Body)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+  fmt.Printf("Got HTTP %d while sendig message\n", statusCode)
 	w.WriteHeader(http.StatusOK)
 	return
 }
