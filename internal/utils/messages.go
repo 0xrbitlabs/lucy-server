@@ -9,7 +9,7 @@ import (
 	"os"
 )
 
-func SendMessageSingle(to, content string) (int, error) {
+func SendMessageSingle(to, content string) error {
 	reqBody, err := json.Marshal(struct {
 		MessagingProduct string `json:"messaging_product"`
 		RecipientType    string `json:"recipient_type"`
@@ -31,7 +31,7 @@ func SendMessageSingle(to, content string) (int, error) {
 		},
 	})
 	if err != nil {
-		return 0, fmt.Errorf("Error while marshalling request body: %w", err)
+		return fmt.Errorf("Error while marshalling request body: %w", err)
 	}
 	url := fmt.Sprintf("https://graph.facebook.com/v18.0/%s/messages", os.Getenv("PHONE_NUMBER_ID"))
 	req, err := http.NewRequest(
@@ -40,22 +40,24 @@ func SendMessageSingle(to, content string) (int, error) {
 		bytes.NewBuffer(reqBody),
 	)
 	if err != nil {
-		return 0, fmt.Errorf("Error while constructing request: %w", err)
+		return fmt.Errorf("Error while constructing request: %w", err)
 	}
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", os.Getenv("META_TOKEN")))
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, fmt.Errorf("Error while sending request: %w", err)
+		return fmt.Errorf("Error while sending request: %w", err)
 	}
 	status := resp.StatusCode
-	responseData, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return 0, fmt.Errorf("Error while reading request body: %w", err)
+	if status != 200 {
+		responseData, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return fmt.Errorf("Error while reading request body: %w", err)
+		}
+		return fmt.Errorf("Error while sending message, wanted HTTP 200 but got HTTP %d with error message: %s", status, string(responseData))
 	}
-	fmt.Printf("%s\n", string(responseData))
-	return status, nil
+	return nil
 }
 
 func SendTemplateMessage(template, to, language string) {}

@@ -95,13 +95,12 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	statusCode, err := utils.SendMessageSingle(userPhone, message.Text.Body)
+	err = utils.SendMessageSingle(userPhone, message.Text.Body)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-  fmt.Printf("Got HTTP %d while sendig message\n", statusCode)
 	w.WriteHeader(http.StatusOK)
 	return
 }
