@@ -13,12 +13,14 @@ import (
 type WebhookHandler struct {
 	users  *store.Users
 	logger *slog.Logger
+	codes  *store.VerificationCodes
 }
 
-func NewWebhookHandler(users *store.Users, logger *slog.Logger) *WebhookHandler {
+func NewWebhookHandler(users *store.Users, logger *slog.Logger, codes *store.VerificationCodes) *WebhookHandler {
 	return &WebhookHandler{
 		users:  users,
 		logger: logger,
+		codes:  codes,
 	}
 }
 
@@ -58,8 +60,13 @@ func (h *WebhookHandler) Handle(w http.ResponseWriter, r *http.Request) {
 	}
 	message := messages[0]
 	userContactInfo := payload.Entry[0].Changes[0].Value.Contacts[0]
+  userPhone := message.From
 	if message.Type == "button" {
-		h.HandleButtonReplyEvent()
+		replyData := payload.Entry[0].Changes[0].Value.Messages[0].Button
+		if replyData.Text == "Proposer mes produits" {
+			h.HandleRegistrationRequest(w, userContactInfo, userPhone)
+			return
+		}
 		return
 	}
 	if message.Type == "text" {

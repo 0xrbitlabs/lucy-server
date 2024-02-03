@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 )
@@ -119,4 +120,13 @@ func SendTemplateMessage(template, to, language string) error {
 		return fmt.Errorf("Error while sending template message, wanted HTTP 200 but got HTTP %d with error message: %s", status, string(responseData))
 	}
 	return nil
+}
+
+func SendErrorMessage(to string, logger *slog.Logger) error {
+	content := `Une erreur est survenue ;) J'en ai notifie mes createurs et ils travaillent deja dessus. Veuillez reessayer ou les contacter pour obtenir de l'aide`
+  err := SendMessageSingle(to, content)
+  if err!= nil{
+    logger.Error(err.Error())
+  }
+  return err
 }
