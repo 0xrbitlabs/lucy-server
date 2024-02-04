@@ -3,10 +3,9 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"server/internal/types"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
+	"server/internal/types"
 )
 
 type Users struct {
@@ -72,4 +71,19 @@ func (u *Users) GetByPhoneNumber(phoneNumber string) (*types.User, error) {
 		return nil, fmt.Errorf("Error while retrieving user: %w", err)
 	}
 	return dbUser, nil
+}
+
+func (u *Users) UpdateInfo(data *types.UpdateUserInfoPayload) error {
+	_, err := u.db.NamedExec(
+		`
+      update users set
+      name=:name, password=:password, description=:description,
+      country=:country, town=:town where id=:id
+    `,
+		data,
+	)
+	if err != nil {
+		return fmt.Errorf("Error while updating user info: %w", err)
+	}
+	return nil
 }
