@@ -83,7 +83,7 @@ func (h *WebhookHandler) HandleRegistrationRequest(w http.ResponseWriter, userCo
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	userRegistrationURL := fmt.Sprintf("%s/register?auth_code=%s", os.Getenv("WEB_APP_URL"), code)
+	userRegistrationURL := fmt.Sprintf("%s/register?auth_code=%s&phone_number=%s", os.Getenv("WEB_APP_URL"), code, userPhone)
 	err = utils.SendRegistrationConfirmationMessage(userPhone, userRegistrationURL)
 	if err != nil {
 		h.logger.Error(err.Error())
