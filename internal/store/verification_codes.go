@@ -18,7 +18,7 @@ func NewVerificationCodesStore(redis *redis.Client) *VerificationCodes {
 	}
 }
 
-func (s *VerificationCodes) Create(code, phone string) error {
+func (s *VerificationCodes) Create(phone, code string) error {
 	err := s.redis.Set(
 		context.Background(),
 		phone,
@@ -45,7 +45,7 @@ func (s *VerificationCodes) Get(phone string) (string, error) {
 	return code, nil
 }
 
-func (s *VerificationCodes) Delete(code, phone string) error {
+func (s *VerificationCodes) Delete(phone string) error {
 	err := s.redis.Del(
 		context.Background(),
 		phone,
