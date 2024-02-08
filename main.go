@@ -23,9 +23,9 @@ func main() {
 	}
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	logger := slog.New(textHandler)
-	postgresPool := database.NewPostgresPool()
+  tursoConnection := database.ConnectToTurso()
 	redisClient := database.RedisClient()
-	users := store.NewUsers(postgresPool)
+	users := store.NewUsers(tursoConnection)
 	sessions := store.NewSessionsStore(redisClient)
 	codes := store.NewVerificationCodesStore(redisClient)
 	authHandler := handlers.NewAuthHandler(users, sessions, logger, codes)

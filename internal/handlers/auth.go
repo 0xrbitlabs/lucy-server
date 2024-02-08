@@ -88,6 +88,10 @@ func (h *AuthHandler) CompleteRegistration(w http.ResponseWriter, r *http.Reques
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	err = h.codes.Delete(payload.PhoneNumber)
+	if err != nil {
+		h.logger.Error(err.Error())
+	}
 	sessionID := ulid.Make().String()
 	err = h.sessions.Create(sessionID, dbUser.Id)
 	if err != nil {

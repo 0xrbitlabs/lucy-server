@@ -3,12 +3,11 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"github.com/oklog/ulid/v2"
 	"net/http"
 	"os"
 	"server/internal/types"
 	"server/internal/utils"
-
-	"github.com/oklog/ulid/v2"
 )
 
 func (h *WebhookHandler) HandleTextEvent(w http.ResponseWriter, userContactInfo types.ContactSchema, message types.MessageSchema) {
