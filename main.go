@@ -2,14 +2,18 @@ package main
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
+	"server/internal/app"
 	"server/internal/contexts"
 	"server/internal/database"
 	"server/internal/models"
 	"server/internal/stores"
+
+	"github.com/joho/godotenv"
+	"github.com/twilio/twilio-go"
 )
 
 func main() {
@@ -21,13 +25,19 @@ func main() {
 			panic(err)
 		}
 	}
+	port := os.Getenv("PORT")
+	accountSID := os.Getenv("ACCOUNT_SID")
+	authToken := os.Getenv("AUTH_TOKEN")
+	twilioClient := twilio.NewRestClientWithParams(twilio.ClientParams{
+		Username: accountSID,
+		Password: authToken,
+	})
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	logger := slog.New(textHandler)
 	postgresPool := database.PostgresPool()
 	users := stores.NewUserStore(postgresPool)
-	router := http.NewServeMux()
-	router.HandleFunc("POST /hook", func(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("got here")
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
 		inboundMessage := models.NewInboundMessage(r)
 		context, err := contexts.Get(inboundMessage, users)
 		if err != nil {
@@ -36,23 +46,18 @@ func main() {
 		}
 		switch context {
 		case contexts.FirstMessage:
-			fmt.Println("Hello this is your first message")
+			app.HandleFirstMessage(*inboundMessage, twilioClient)
 			return
 		default:
 			logger.Error("Unkown context")
 			return
 		}
 	})
-	router.HandleFunc("GET /test", func(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("got here 2")
-		w.WriteHeader(http.StatusOK)
-		return
-	})
 	server := http.Server{
-		Addr:    ":8080",
-		Handler: router,
+		Addr:    net.JoinHostPort("0.0.0.0", port),
+		Handler: mux,
 	}
-	fmt.Println("Server launched on port: 8080")
+	fmt.Println("Server launched on port: ", port)
 	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
