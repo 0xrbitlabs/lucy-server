@@ -7,9 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"server/internal/database"
-	"server/internal/handlers"
-	"server/internal/store"
+	"server/types"
 )
 
 func main() {
@@ -23,22 +21,18 @@ func main() {
 	}
 	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
 	logger := slog.New(textHandler)
-  tursoConnection := database.ConnectToTurso()
-	redisClient := database.RedisClient()
-	users := store.NewUsers(tursoConnection)
-	sessions := store.NewSessionsStore(redisClient)
-	codes := store.NewVerificationCodesStore(redisClient)
-	authHandler := handlers.NewAuthHandler(users, sessions, logger, codes)
-	webhookHandler := handlers.NewWebhookHandler(users, logger, codes)
+	_ = logger
 	r := chi.NewRouter()
 
 	r.Route("/hook", func(r chi.Router) {
-		r.Get("/", webhookHandler.Verify)
-		r.Post("/", webhookHandler.Handle)
+		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
+			inboundMessage := types.NewInboundMessage(r)
+			fmt.Printf("%+v", inboundMessage)
+			return
+		})
 	})
 
 	r.Route("/auth", func(r chi.Router) {
-		r.Post("/register", authHandler.CompleteRegistration)
 	})
 	fmt.Println("Server launched on port 8081")
 	err := http.ListenAndServe(":8081", r)
