@@ -14,7 +14,7 @@ func HandleFirstMessage(message models.InboundMessage, twilioClient *twilio.Rest
 	//Send welcome message
 	params := &openapi.CreateMessageParams{}
 	params.SetFrom(os.Getenv("PHONE_NUMBER"))
-  params.SetTo(fmt.Sprintf("whatsapp:+%s", message.WaID))
+  params.SetTo(fmt.Sprintf("whatsapp:+%s", message.From))
 	params.SetBody("Hello\n")
 
 	resp, err := twilioClient.Api.CreateMessage(params)
