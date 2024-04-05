@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/joho/godotenv"
 	"log/slog"
 	"net"
 	"net/http"
@@ -11,8 +12,6 @@ import (
 	"server/internal/database"
 	"server/internal/models"
 	"server/internal/stores"
-
-	"github.com/joho/godotenv"
 )
 
 func main() {
