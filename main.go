@@ -3,15 +3,17 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/joho/godotenv"
 	"log/slog"
 	"net"
 	"net/http"
 	"os"
+	"server/internal/app"
 	"server/internal/contexts"
 	"server/internal/database"
 	"server/internal/models"
 	"server/internal/stores"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -40,7 +42,7 @@ func main() {
 		context, _ := contexts.Get(payload, users)
 		switch context {
 		case contexts.FirstMessage:
-			fmt.Println("Hey, seems like it was your first message")
+      app.HandleFirstMessage(*payload)
 		}
 		w.WriteHeader(http.StatusOK)
 		return

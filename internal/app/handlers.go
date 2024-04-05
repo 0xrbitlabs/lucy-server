@@ -1,27 +1,16 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
-	"github.com/twilio/twilio-go"
-	"github.com/twilio/twilio-go/rest/api/v2010"
-	"os"
 	"server/internal/models"
+	"server/internal/pkg"
 )
 
-func HandleFirstMessage(message models.InboundMessage, twilioClient *twilio.RestClient) {
+func HandleFirstMessage(message models.InboundMessage) {
 	//Store user in database
 	//Send welcome message
-	params := &openapi.CreateMessageParams{}
-	params.SetFrom(os.Getenv("PHONE_NUMBER"))
-  params.SetTo(fmt.Sprintf("whatsapp:+%s", message.From))
-	params.SetBody("Hello\n")
-
-	resp, err := twilioClient.Api.CreateMessage(params)
+	err := pkg.SendTextMessage(message.From, "Hello, seems like this is your first message to me :)")
 	if err != nil {
-		fmt.Println("Error while sending message ", err.Error())
-	} else {
-		response, _ := json.Marshal(*resp)
-		fmt.Println(string(response))
+		fmt.Println(err.Error())
 	}
 }
