@@ -17,7 +17,7 @@ const (
 )
 
 func Get(message *models.InboundMessage, users *stores.Users) (Context, error) {
-	user, err := users.GetByPhoneNumber(message.WaID)
+	user, err := users.GetByPhoneNumber(message.From)
 	_ = user
 	if err != nil {
 		if errors.Is(err, appErrors.ErrUserNotFound) {
