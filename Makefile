@@ -1,7 +1,7 @@
 DB_NAME ?= postgres
 
 build:
-	@go build -o server ./main.go
+	@go build ./...
 
 install-deps:
 	@go mod download
