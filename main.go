@@ -3,56 +3,42 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"net"
+	"github.com/joho/godotenv"
 	"net/http"
 	"os"
-	"server/internal/app"
-	"server/internal/contexts"
-	"server/internal/database"
-	"server/internal/models"
-	"server/internal/stores"
-
-	"github.com/joho/godotenv"
+	"server/types"
 )
 
-func main() {
-	env := os.Getenv("ENV")
-	if env != "PROD" {
-		err := godotenv.Load()
-		if err != nil {
-			fmt.Println("Failed to read env var file")
-			panic(err)
-		}
-	}
-	port := os.Getenv("PORT")
-	textHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{})
-	logger := slog.New(textHandler)
-	postgresPool := database.PostgresPool()
-	users := stores.NewUserStore(postgresPool)
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
-		payload := new(models.InboundMessage)
-		err := json.NewDecoder(r.Body).Decode(payload)
-		if err != nil {
-			logger.Error(err.Error())
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-		context, _ := contexts.Get(payload, users)
-		switch context {
-		case contexts.FirstMessage:
-      app.HandleFirstMessage(*payload)
-		}
+func Verify(w http.ResponseWriter, r *http.Request) {
+	verifyToken := os.Getenv("VERIFY_TOKEN")
+	mode := r.URL.Query().Get("hub.mode")
+	token := r.URL.Query().Get("hub.verify_token")
+	challenge := r.URL.Query().Get("hub.challenge")
+	if mode == "subscribe" && token == verifyToken {
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(challenge))
 		return
-	})
-	server := http.Server{
-		Addr:    net.JoinHostPort("0.0.0.0", port),
-		Handler: mux,
 	}
-	fmt.Println("Server launched on port: ", port)
-	if err := server.ListenAndServe(); err != nil {
-		panic(err)
+	w.WriteHeader(http.StatusBadRequest)
+	return
+}
+
+func Handle(w http.ResponseWriter, r *http.Request) {
+	message := new(types.InboundMessage)
+	err := json.NewDecoder(r.Body).Decode(message)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
 	}
+	fmt.Printf("%+v", message)
+	return
+}
+
+func main() {
+	godotenv.Load()
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /hook", Verify)
+	mux.HandleFunc("POST /hook", Handle)
+	fmt.Println("Server started on port 9090")
+	http.ListenAndServe(":9090", mux)
 }
