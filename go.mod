@@ -1,4 +1,4 @@
-module server
+module lucy
 
 go 1.22.0
 
