@@ -28,6 +28,10 @@ func (s *Server) handleCategoryCreate() http.HandlerFunc {
 			s.writeError(w, app_errors.ErrInternal, http.StatusInternalServerError)
 			return
 		}
+		if data.Label == "" || data.Description == "" {
+			s.writeError(w, app_errors.ErrBadRequest, http.StatusBadRequest)
+			return
+		}
 		newCategory := &types.Category{
 			ID:          ulid.Make().String(),
 			Label:       data.Label,
@@ -44,7 +48,23 @@ func (s *Server) handleCategoryCreate() http.HandlerFunc {
 			s.writeError(w, app_errors.ErrInternal, http.StatusInternalServerError)
 			return
 		}
-		s.writeData(w, http.StatusCreated, map[string]interface{}{})
+		s.writeData(w, http.StatusCreated, nil)
+		return
+	}
+}
+
+func (s *Server) handleCategoryGetAll() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, ok := r.Context().Value("user").(*types.Admin)
+		data, err := s.Store.GetCategories(ok)
+		if err != nil {
+			s.logger.Error(err.Error())
+			s.writeError(w, app_errors.ErrInternal, http.StatusInternalServerError)
+			return
+		}
+		s.writeData(w, http.StatusOK, map[string]interface{}{
+			"categories": data,
+		})
 		return
 	}
 }

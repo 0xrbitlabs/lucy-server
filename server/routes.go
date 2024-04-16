@@ -16,6 +16,7 @@ func (s *Server) registerRoutes() {
 	mux.Handle("GET /hook", s.Verify())
 	mux.Handle("POST /hook", s.Handle())
 
-	mux.Handle("POST /v1/categories", s.handleCategoryCreate())
+	mux.Handle("POST /v1/categories", s.Authenticate()(s.handleCategoryCreate()))
+	mux.Handle("GET /v1/categories", s.Authenticate()(s.handleCategoryGetAll()))
 	s.Router = mux
 }

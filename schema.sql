@@ -22,5 +22,6 @@ create table users (
 create table categories (
   id text not null primary key,
   label text not null unique,
-  description text not null
+  description text not null,
+  enabled bool not null default false
 );

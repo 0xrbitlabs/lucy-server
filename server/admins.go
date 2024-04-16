@@ -105,7 +105,7 @@ func (s *Server) handleCreateAdmin() http.HandlerFunc {
 			s.writeError(w, app_errors.ErrInternal, http.StatusInternalServerError)
 			return
 		}
-		s.writeData(w, http.StatusCreated, map[string]interface{}{})
+		s.writeData(w, http.StatusCreated, nil)
 		return
 	}
 }
@@ -146,7 +146,7 @@ func (s *Server) handleChangePassword() http.HandlerFunc {
 				s.writeError(w, app_errors.ErrInternal, http.StatusInternalServerError)
 				return
 			}
-			s.writeData(w, http.StatusOK, map[string]interface{}{})
+			s.writeData(w, http.StatusOK, nil)
 			return
 		default:
 			w.WriteHeader(http.StatusUnauthorized)
