@@ -42,3 +42,11 @@ func (s *Store) GetAdmin(filter GetAdminFilter) (*types.Admin, error) {
 	}
 	return admin, nil
 }
+
+func (s *Store) UpdateAdminInfo(username, passwordHash string) error {
+	_, err := s.db.Exec("update admins set username=$1, password=$2", username, passwordHash)
+	if err != nil {
+		return fmt.Errorf("Error while updating admin info: %w", err)
+	}
+	return nil
+}
