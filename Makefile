@@ -7,8 +7,8 @@ install-deps:
 	@go mod download
 
 dev:
-	@go build main.go
-	@./main
+	@go build -o ./tmp/main cmd/main.go
+	@./tmp/main
 
 setup-db:
 	@docker exec -it $(DB_NAME) psql -U postgres -c 'CREATE DATABASE lucy;'
