@@ -6,7 +6,6 @@
 *.test
 *.out
 go.work
-server
 main
 .env
 tmp/
