@@ -1,7 +1,7 @@
-DB_NAME ?= postgres
+include .env
 
 build:
-	@go build ./...
+	@go build -o ./tmp/main .
 
 install-deps:
 	@go mod download

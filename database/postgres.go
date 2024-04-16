@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jmoiron/sqlx"
@@ -12,5 +13,6 @@ func GetPostgresPool() *sqlx.DB {
 	if err != nil {
 		panic(err)
 	}
+  fmt.Println("Connected to Postgres")
 	return db
 }

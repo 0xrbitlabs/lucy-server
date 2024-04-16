@@ -1,6 +1,8 @@
 package store
 
 import (
+	"lucy/database"
+
 	"github.com/jmoiron/sqlx"
 )
 
@@ -8,7 +10,8 @@ type Store struct {
 	db *sqlx.DB
 }
 
-func NewStore(db *sqlx.DB) *Store {
+func NewStore() *Store {
+	db := database.GetPostgresPool()
 	return &Store{
 		db: db,
 	}
