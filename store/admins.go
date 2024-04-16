@@ -15,8 +15,8 @@ type GetAdminFilter struct {
 func (s *Store) InsertAdmin(admin types.Admin) error {
 	_, err := s.db.NamedExec(
 		`
-      insert into admins(username, password, is_super)
-      values(:username, :password, :is_super)
+      insert into admins(id, username, password, is_super)
+      values(:id, :username, :password, :is_super)
     `,
 		admin,
 	)
@@ -24,6 +24,18 @@ func (s *Store) InsertAdmin(admin types.Admin) error {
 		return fmt.Errorf("Error while inserting admin: %w", err)
 	}
 	return nil
+}
+
+func (s *Store) CountAdminByUsername(username string) (int, error) {
+	count := 0
+	err := s.db.QueryRowx(
+		"select count(*) from admins where username=$1",
+		username,
+	).Scan(&count)
+	if err != nil {
+		return -1, fmt.Errorf("Error while counting admins: %w", err)
+	}
+	return count, nil
 }
 
 func (s *Store) GetAdmin(filter GetAdminFilter) (*types.Admin, error) {
