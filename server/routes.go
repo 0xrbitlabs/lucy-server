@@ -1,22 +1,31 @@
 package server
 
-import "net/http"
+import (
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+)
 
 func (s *Server) registerRoutes() {
-	mux := http.NewServeMux()
+	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 
-	mux.Handle("POST /v1/auth/admin/new", s.Authenticate()(
-		s.handleCreateAdmin(),
-	))
-	mux.Handle("POST /v1/auth/admin", s.handleAdminLogin())
-	mux.Handle("PUT /v1/auth/admin/password", s.Authenticate()(
-		s.handleChangePassword(),
-	))
+	r.Route("/auth", func(r chi.Router) {
+		r.With(s.Authenticate).Route("/admin", func(r chi.Router) {
+			r.Post("/new", s.handleCreateAdmin)
+			r.Post("/login", s.handleAdminLogin)
+			r.Post("/password", s.handleChangePassword)
+		})
+	})
 
-	mux.Handle("GET /hook", s.Verify())
-	mux.Handle("POST /hook", s.Handle())
+	r.Route("/hook", func(r chi.Router) {
+		r.Get("/", s.Verify)
+		r.Post("/", s.Handle)
+	})
 
-	mux.Handle("POST /v1/categories", s.Authenticate()(s.handleCategoryCreate()))
-	mux.Handle("GET /v1/categories", s.Authenticate()(s.handleCategoryGetAll()))
-	s.Router = mux
+	r.With(s.Authenticate).Route("/categories", func(r chi.Router) {
+		r.Post("/", s.handleCategoryCreate)
+		r.Get("/", s.handleCategoryGetAll)
+	})
+
+	s.Router = r
 }

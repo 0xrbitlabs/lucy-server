@@ -1,19 +1,11 @@
-create table admins (
-  id text primary key,
-  username text not null unique,
-  password text not null,
-  is_super boolean not null default false
-);
-
-insert into admins (id, username, password, is_super)
-values ('1','super', '$2y$08$csvIkjxk6fCR9CGVp0tCpeGFyVRt0iE9PFIVyKkXPX0iyo0XFUFZW', true);
+CREATE TYPE user_type AS ENUM ('super_admin', 'admin', 'seller', 'regular');
 
 create table users (
   id text not null primary key,
-  user_type text not null,
+  type user_type not null,
   phone_number text not null unique,
   password text not null,
-  name text not null,
+  username text not null,
   description text not null,
   country text not null,
   town text not null
