@@ -52,7 +52,7 @@ func (s *Server) handleCategoryCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCategoryGetAll(w http.ResponseWriter, r *http.Request) {
-	_, ok := r.Context().Value("user").(*types.Admin)
+	_, ok := r.Context().Value("user").(*types.User)
 	data, err := s.Store.GetCategories(ok)
 	if err != nil {
 		s.logger.Error(err.Error())

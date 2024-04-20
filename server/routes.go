@@ -1,8 +1,15 @@
 package server
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+)
+
+var (
+	SuperAdmin = "super_admin"
+	Admin      = "admin"
 )
 
 func (s *Server) registerRoutes() {
@@ -10,10 +17,10 @@ func (s *Server) registerRoutes() {
 	r.Use(middleware.Logger)
 
 	r.Route("/auth", func(r chi.Router) {
-		r.With(s.Authenticate).Route("/admin", func(r chi.Router) {
-			r.Post("/new", s.handleCreateAdmin)
-			r.Post("/login", s.handleAdminLogin)
-			r.Post("/password", s.handleChangePassword)
+		r.With(s.Allow(SuperAdmin, Admin)).Route("/admin", func(r chi.Router) {
+			r.Post("/new", s.CreateAdminAccount)
+			r.Post("/login", func(w http.ResponseWriter, r *http.Request) {})
+			r.Post("/password", func(w http.ResponseWriter, r *http.Request) {})
 		})
 	})
 
@@ -22,7 +29,7 @@ func (s *Server) registerRoutes() {
 		r.Post("/", s.Handle)
 	})
 
-	r.With(s.Authenticate).Route("/categories", func(r chi.Router) {
+	r.With(s.Allow(SuperAdmin, Admin)).Route("/categories", func(r chi.Router) {
 		r.Post("/", s.handleCategoryCreate)
 		r.Get("/", s.handleCategoryGetAll)
 	})
