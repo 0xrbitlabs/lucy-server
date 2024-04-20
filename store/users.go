@@ -42,3 +42,17 @@ func (s *Store) GetUserByID(id string) (*types.User, error) {
 	}
 	return user, nil
 }
+
+func (s *Store) CheckForDuplicate(phone string) (int, error) {
+	count := 0
+	err := s.db.QueryRow(
+		`
+      select count(*) from users where phone_number=$1
+    `,
+		phone,
+	).Scan(&count)
+	if err != nil {
+		return count, fmt.Errorf("Error while checking for duplicates: %w", err)
+	}
+	return count, nil
+}

@@ -8,13 +8,6 @@ import (
 	"strings"
 )
 
-const (
-	TypeSuperAdmin = "super_admin"
-	TypeAdmin      = "admin"
-	TypeSeller     = "seller"
-	TypeRegular    = "regular"
-)
-
 func (s *Server) Allow(allowedTypes ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
