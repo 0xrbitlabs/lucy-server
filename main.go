@@ -1,33 +1,34 @@
 package main
 
 import (
-	"fmt"
-	"log/slog"
-	"lucy/server"
+	"log"
+	"net"
 	"net/http"
 	"os"
 
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/joho/godotenv"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
-	godotenv.Load()
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-	}))
-	jwtAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
-	server := server.NewServer(
-		logger,
-		jwtAuth,
-	)
-	httpServer := &http.Server{
-		Addr:    ":9090",
-		Handler: server.Router,
+	port, ok := os.LookupEnv("port")
+	if !ok {
+		port = "8080"
 	}
-	fmt.Println("Server started on 9090")
-	err := httpServer.ListenAndServe()
-	if err != nil {
+
+	r := chi.NewRouter()
+
+	r.Use(
+		middleware.Recoverer,
+		middleware.Logger,
+	)
+
+	server := http.Server{
+		Addr: net.JoinHostPort("0.0.0.0", port),
+	}
+
+  log.Println("Starting server on port", port)
+	if err := server.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }
