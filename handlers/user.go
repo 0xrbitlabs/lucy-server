@@ -15,15 +15,22 @@ type UserService interface {
 }
 
 type UserHandler struct {
-	UserService
-	types.ILogger
+	service UserService
+	logger  types.ILogger
 }
 
-func (h UserHandler) handleCreateAdminAccount(w http.ResponseWriter, r *http.Request) {
+func NewUserHandler(service UserService, logger types.ILogger) UserHandler {
+	return UserHandler{
+		service: service,
+		logger:  logger,
+	}
+}
+
+func (h UserHandler) HandleCreateAdminAccount(w http.ResponseWriter, r *http.Request) {
 	payload := &dtos.CreateAdminDTO{}
 	err := json.NewDecoder(r.Body).Decode(payload)
 	if err != nil {
-		h.Error("Error while decoding request body: ", err)
+		h.logger.Error("Error while decoding request body: ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -32,9 +39,11 @@ func (h UserHandler) handleCreateAdminAccount(w http.ResponseWriter, r *http.Req
 		WriteData(w, http.StatusBadRequest, errs)
 		return
 	}
-	err = h.CreateAdminAccount(*payload)
+	err = h.service.CreateAdminAccount(*payload)
 	if err != nil {
-
+		h.logger.Error(err.Error())
+		WriteError(w, err.(types.ServiceError))
+		return
 	}
 	WriteData(w, http.StatusCreated, nil)
 	return

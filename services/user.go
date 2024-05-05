@@ -3,6 +3,7 @@ package services
 import (
 	"lucy/dtos"
 	"lucy/models"
+	"lucy/repositories"
 	"lucy/types"
 
 	"github.com/oklog/ulid/v2"
@@ -11,20 +12,27 @@ import (
 
 type UserRepo interface {
 	Insert(*models.User) error
-	GetByID(id string) (*models.User, error)
+	GetUser(filter repositories.Filter) (*models.User, error)
 	CountByPhone(phone string) (int, error)
 	GetAll() (*[]models.User, error)
 }
 
 type UserService struct {
-	UserRepo
-	types.ILogger
+	userRepo UserRepo
+	logger   types.ILogger
+}
+
+func NewUserService(userRepo UserRepo, logger types.ILogger) UserService {
+	return UserService{
+		userRepo: userRepo,
+		logger:   logger,
+	}
 }
 
 func (svc UserService) CreateAdminAccount(data dtos.CreateAdminDTO) error {
-	count, err := svc.CountByPhone(data.Phone)
+	count, err := svc.userRepo.CountByPhone(data.Phone)
 	if err != nil {
-		svc.Error(err.Error())
+		svc.logger.Error(err.Error())
 		return types.ServiceErrInternal
 	}
 	if count != 0 {
@@ -32,7 +40,7 @@ func (svc UserService) CreateAdminAccount(data dtos.CreateAdminDTO) error {
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 	if err != nil {
-		svc.Error("Error while hashing password: ", err)
+		svc.logger.Error("Error while hashing password: ", err)
 		return types.ServiceErrInternal
 	}
 	newUser := &models.User{
@@ -45,9 +53,17 @@ func (svc UserService) CreateAdminAccount(data dtos.CreateAdminDTO) error {
 		Country:     "",
 		Town:        "",
 	}
-	err = svc.Insert(newUser)
+	err = svc.userRepo.Insert(newUser)
 	if err != nil {
-
+		svc.logger.Error(err.Error())
+		return types.ServiceErrInternal
 	}
 	return nil
+}
+
+func (svc UserService) GetAllUsers() (*[]models.User, error) {
+	return nil, nil
+}
+func (svc UserService) GetUserByID(id string) (*models.User, error) {
+	return nil, nil
 }

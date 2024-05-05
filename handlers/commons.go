@@ -18,6 +18,13 @@ func WriteData(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Write(bytes)
 }
 
-func WriteError(w http.ResponseWriter, statusCode int, error types.ServiceError) {
-
+func WriteError(w http.ResponseWriter, error types.ServiceError) {
+	bytes, _ := json.Marshal(map[string]interface{}{
+		"error": map[string]string{
+			"code": error.ErrorCode,
+		},
+	})
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(error.StatusCode)
+	w.Write(bytes)
 }

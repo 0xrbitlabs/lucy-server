@@ -1,18 +1,22 @@
 package db
 
 import (
+	"log"
+	"os"
+
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 
-func PostgresDB(dbURL string) (*sqlx.DB, error) {
-	db, err := sqlx.Connect("postgres", dbURL)
+func PostgresDB() *sqlx.DB {
+	db, err := sqlx.Connect("postgres", os.Getenv("POSTGRES_URL"))
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return db, nil
+  log.Println("Connected to Postgres")
+	return db
 }

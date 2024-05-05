@@ -10,3 +10,4 @@ main
 .env
 tmp/
 database.*
+lucy

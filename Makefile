@@ -1,7 +1,7 @@
 include .env
 
 build:
-	@go build -o ./tmp/main .
+	@go build -o lucy .
 
 install-deps:
 	@go mod download

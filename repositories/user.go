@@ -11,11 +11,20 @@ import (
 )
 
 type UserRepo struct {
-	*sqlx.DB
+	db *sqlx.DB
+}
+
+func NewUserRepo(db *sqlx.DB) UserRepo {
+	return UserRepo{db: db}
+}
+
+type Filter struct {
+	Field string
+	Value string
 }
 
 func (repo UserRepo) Insert(user *models.User) error {
-	_, err := repo.NamedExec(
+	_, err := repo.db.NamedExec(
 		`
       insert into users(
         id, username, phone, password, account_type, description, country, town
@@ -32,25 +41,26 @@ func (repo UserRepo) Insert(user *models.User) error {
 	return nil
 }
 
-func (repo UserRepo) GetByID(id string) (*models.User, error) {
+func (repo UserRepo) GetUser(filter Filter) (*models.User, error) {
 	user := &models.User{}
-	err := repo.Get(
+	query := fmt.Sprintf("select * from users where %s=$1", filter.Field)
+	err := repo.db.Get(
 		user,
-		"select * from users where id=$1",
-		id,
+		query,
+		filter.Value,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, types.ErrResourceNotFound
 		}
-		return nil, fmt.Errorf("Error while getting user by id: %w", err)
+		return nil, fmt.Errorf("Error while getting user by %s: %w", filter.Field, err)
 	}
 	return user, nil
 }
 
 func (repo UserRepo) GetAll() (*[]models.User, error) {
 	users := []models.User{}
-	err := repo.Select(
+	err := repo.db.Select(
 		&users,
 		"select * from users",
 	)
@@ -62,7 +72,7 @@ func (repo UserRepo) GetAll() (*[]models.User, error) {
 
 func (repo UserRepo) CountByPhone(phone string) (int, error) {
 	count := 0
-	err := repo.QueryRowx("select count(*) from users where phone=$1", phone).Scan(&count)
+	err := repo.db.QueryRowx("select count(*) from users where phone=$1", phone).Scan(&count)
 	if err != nil {
 		return count, fmt.Errorf("Error while counting users by phone: %w", err)
 	}

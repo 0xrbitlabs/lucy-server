@@ -1,9 +1,9 @@
 package dtos
 
 type CreateAdminDTO struct {
-	Username string `json:"username" db:"username"`
-	Phone    string `json:"phone" db:"phone"`
-	Password string `json:"password" db:"password"`
+	Username string `json:"username"`
+	Phone    string `json:"phone"`
+	Password string `json:"password"`
 }
 
 func (dto CreateAdminDTO) Validate() map[string]string {
