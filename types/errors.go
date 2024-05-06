@@ -34,4 +34,6 @@ const (
 	ErrPhoneNotFound  = "PhoneNotFound"
 	ErrInternal       = "ErrInternal"
 	ErrDuplicatePhone = "DuplicatePhone"
+	ErrWrongPassword  = "WrongPassword"
+	ErrTokenEncoding  = "TokenEncoding"
 )

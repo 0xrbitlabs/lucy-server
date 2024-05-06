@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"lucy/dtos"
+	"lucy/interfaces"
 	"lucy/models"
 	"lucy/types"
 	"net/http"
@@ -16,10 +17,10 @@ type UserService interface {
 
 type UserHandler struct {
 	service UserService
-	logger  types.ILogger
+	logger  interfaces.Logger
 }
 
-func NewUserHandler(service UserService, logger types.ILogger) UserHandler {
+func NewUserHandler(service UserService, logger interfaces.Logger) UserHandler {
 	return UserHandler{
 		service: service,
 		logger:  logger,

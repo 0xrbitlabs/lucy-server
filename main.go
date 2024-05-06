@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"lucy/db"
 	"lucy/handlers"
+	"lucy/providers"
 	"lucy/repositories"
 	"lucy/services"
 	"net"
@@ -32,21 +33,22 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	}))
+	jwtProvider := providers.NewJWTProvider()
 
 	userRepo := repositories.NewUserRepo(postgresPool)
 
 	userService := services.NewUserService(userRepo, logger)
+	authService := services.NewAuthService(userRepo, logger, jwtProvider)
 
 	userHandler := handlers.NewUserHandler(userService, logger)
+	authHandler := handlers.NewAuthHandler(authService, logger)
 
 	r.Route("/users", func(r chi.Router) {
 		r.Post("/", userHandler.HandleCreateAdminAccount)
 	})
 
 	r.Route("/auth", func(r chi.Router) {
-		r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
-
-		})
+		r.Post("/login", authHandler.HandleLogin)
 	})
 
 	server := http.Server{

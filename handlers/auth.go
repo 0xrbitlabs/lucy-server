@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"lucy/dtos"
+	"lucy/interfaces"
 	"lucy/types"
 	"net/http"
 )
@@ -13,7 +14,14 @@ type AuthService interface {
 
 type AuthHandler struct {
 	service AuthService
-	logger  types.ILogger
+	logger  interfaces.Logger
+}
+
+func NewAuthHandler(service AuthService, logger interfaces.Logger) AuthHandler {
+	return AuthHandler{
+		service: service,
+		logger:  logger,
+	}
 }
 
 func (h AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +39,6 @@ func (h AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	token, err := h.service.Login(*payload)
 	if err != nil {
-		h.logger.Error(err.Error())
 		WriteError(w, err.(types.ServiceError))
 		return
 	}
