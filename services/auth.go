@@ -39,11 +39,14 @@ func (s AuthService) Login(data dtos.LoginDTO) (*string, error) {
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.Password))
 	if err != nil {
-		s.logger.Error("Error while comparing hash and password", err)
-		return nil, types.ServiceError{
-			StatusCode: http.StatusBadRequest,
-			ErrorCode:  types.ErrWrongPassword,
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return nil, types.ServiceError{
+				StatusCode: http.StatusBadRequest,
+				ErrorCode:  types.ErrWrongPassword,
+			}
 		}
+		s.logger.Error("Error while comparing hash and password", err)
+		return nil, types.ServiceErrInternal
 	}
 	authToken, err := s.jwt.Encode(map[string]interface{}{
 		"id": user.ID,

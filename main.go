@@ -19,7 +19,8 @@ import (
 
 func main() {
 	godotenv.Load()
-	port := os.Getenv("port")
+	port := os.Getenv("PORT")
+	log.Println(port)
 
 	r := chi.NewRouter()
 
@@ -52,7 +53,8 @@ func main() {
 	})
 
 	server := http.Server{
-		Addr: net.JoinHostPort("0.0.0.0", port),
+		Addr:    net.JoinHostPort("0.0.0.0", port),
+		Handler: r,
 	}
 
 	log.Println("Starting server on port", port)

@@ -13,5 +13,8 @@ func (dto LoginDTO) Validate() map[string]string {
 	if dto.Password == "" {
 		errors["password"] = "phone can not be empty"
 	}
-	return errors
+	if len(errors) > 0 {
+		return errors
+	}
+	return nil
 }
