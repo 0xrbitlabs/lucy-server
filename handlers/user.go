@@ -4,23 +4,16 @@ import (
 	"encoding/json"
 	"lucy/dtos"
 	"lucy/interfaces"
-	"lucy/models"
 	"lucy/types"
 	"net/http"
 )
 
-type UserService interface {
-	CreateAdminAccount(dtos.CreateAdminDTO) error
-	GetAllUsers() (*[]models.User, error)
-	GetUserByID(id string) (*models.User, error)
-}
-
 type UserHandler struct {
-	service UserService
+	service interfaces.UserService
 	logger  interfaces.Logger
 }
 
-func NewUserHandler(service UserService, logger interfaces.Logger) UserHandler {
+func NewUserHandler(service interfaces.UserService, logger interfaces.Logger) UserHandler {
 	return UserHandler{
 		service: service,
 		logger:  logger,

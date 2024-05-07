@@ -12,12 +12,12 @@ import (
 )
 
 type AuthService struct {
-	userRepo UserRepo
+	userRepo interfaces.UserRepo
 	logger   interfaces.Logger
 	jwt      interfaces.JWTProvider
 }
 
-func NewAuthService(userRepo UserRepo, logger interfaces.Logger, jwt interfaces.JWTProvider) AuthService {
+func NewAuthService(userRepo interfaces.UserRepo, logger interfaces.Logger, jwt interfaces.JWTProvider) AuthService {
 	return AuthService{
 		userRepo: userRepo,
 		logger:   logger,

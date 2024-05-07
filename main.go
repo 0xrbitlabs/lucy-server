@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -20,7 +21,6 @@ import (
 func main() {
 	godotenv.Load()
 	port := os.Getenv("PORT")
-	log.Println(port)
 
 	r := chi.NewRouter()
 
@@ -53,8 +53,10 @@ func main() {
 	})
 
 	server := http.Server{
-		Addr:    net.JoinHostPort("0.0.0.0", port),
-		Handler: r,
+		Addr:         net.JoinHostPort("0.0.0.0", port),
+		Handler:      r,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 
 	log.Println("Starting server on port", port)

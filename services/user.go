@@ -4,26 +4,18 @@ import (
 	"lucy/dtos"
 	"lucy/interfaces"
 	"lucy/models"
-	"lucy/repositories"
 	"lucy/types"
 
 	"github.com/oklog/ulid/v2"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserRepo interface {
-	Insert(*models.User) error
-	GetUser(filter repositories.Filter) (*models.User, error)
-	CountByPhone(phone string) (int, error)
-	GetAll() (*[]models.User, error)
-}
-
 type UserService struct {
-	userRepo UserRepo
+	userRepo interfaces.UserRepo
 	logger   interfaces.Logger
 }
 
-func NewUserService(userRepo UserRepo, logger interfaces.Logger) UserService {
+func NewUserService(userRepo interfaces.UserRepo, logger interfaces.Logger) UserService {
 	return UserService{
 		userRepo: userRepo,
 		logger:   logger,

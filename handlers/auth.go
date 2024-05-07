@@ -8,16 +8,12 @@ import (
 	"net/http"
 )
 
-type AuthService interface {
-	Login(data dtos.LoginDTO) (*string, error)
-}
-
 type AuthHandler struct {
-	service AuthService
+	service interfaces.AuthService
 	logger  interfaces.Logger
 }
 
-func NewAuthHandler(service AuthService, logger interfaces.Logger) AuthHandler {
+func NewAuthHandler(service interfaces.AuthService, logger interfaces.Logger) AuthHandler {
 	return AuthHandler{
 		service: service,
 		logger:  logger,
