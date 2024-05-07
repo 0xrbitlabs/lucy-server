@@ -12,3 +12,10 @@ type UserRepo interface {
 	GetAll() (*[]models.User, error)
 	UpdatePassword(userId, password string) error
 }
+
+type CategoryRepo interface {
+	Insert(*models.Category) error
+	GetCategory(filter repositories.Filter) (*models.Category, error)
+	GetAll() (*[]models.Category, error)
+	CountByLabel(label string) (int, error)
+}

@@ -8,3 +8,8 @@ create table if not exists users (
   country text not null default '',
   town text not null default ''
 );
+
+create table if not exists categories (
+  id text not null primary key,
+  label text not null unique
+);

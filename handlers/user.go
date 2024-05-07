@@ -30,8 +30,8 @@ func (h UserHandler) HandleCreateAdminAccount(w http.ResponseWriter, r *http.Req
 	}
 	errs := payload.Validate()
 	if errs != nil {
-		WriteData(w, http.StatusBadRequest, errs)
-		return
+		WriteBadReqErr(w, errs)
+    return
 	}
 	err = h.service.CreateAdminAccount(*payload)
 	if err != nil {
@@ -39,7 +39,6 @@ func (h UserHandler) HandleCreateAdminAccount(w http.ResponseWriter, r *http.Req
 		return
 	}
 	WriteData(w, http.StatusCreated, nil)
-	return
 }
 
 func (h UserHandler) HandleChangeUserPassword(w http.ResponseWriter, r *http.Request) {
@@ -52,8 +51,8 @@ func (h UserHandler) HandleChangeUserPassword(w http.ResponseWriter, r *http.Req
 	}
 	errs := payload.Validate()
 	if errs != nil {
-		WriteData(w, http.StatusBadRequest, errs)
-		return
+		WriteBadReqErr(w, errs)
+    return
 	}
 	err = h.service.ChangePassword(*payload)
 	if err != nil {
@@ -61,5 +60,4 @@ func (h UserHandler) HandleChangeUserPassword(w http.ResponseWriter, r *http.Req
 		return
 	}
 	WriteData(w, http.StatusOK, nil)
-	return
 }

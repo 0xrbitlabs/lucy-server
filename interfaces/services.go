@@ -15,3 +15,8 @@ type UserService interface {
 	GetUserByID(id string) (*models.User, error)
 	ChangePassword(dtos.ChangeUserPasswordDTO) error
 }
+
+type CategoryService interface {
+	CreateCategory(dtos.CreateCategoryDTO) error
+  GetAllCategories() (*[]models.Category, error)
+}

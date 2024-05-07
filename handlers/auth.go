@@ -30,7 +30,7 @@ func (h AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	errs := payload.Validate()
 	if errs != nil {
-		WriteData(w, http.StatusBadRequest, errs)
+		WriteBadReqErr(w, errs)
 		return
 	}
 	token, err := h.service.Login(*payload)
@@ -41,5 +41,4 @@ func (h AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	WriteData(w, http.StatusOK, map[string]string{
 		"token": *token,
 	})
-	return
 }

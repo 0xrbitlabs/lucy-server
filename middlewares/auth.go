@@ -54,8 +54,13 @@ func (m AuthMiddleware) AllowAccounts(accountTypes ...types.AccountType) func(ne
 			}
 			isNotAllowed := true
 			for _, accountType := range accountTypes {
+				if accountType == types.AnyAccount {
+					isNotAllowed = false
+					break
+				}
 				if user.AccountType == accountType {
 					isNotAllowed = false
+					break
 				}
 			}
 			if isNotAllowed {

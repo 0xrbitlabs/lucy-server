@@ -39,14 +39,17 @@ func main() {
 	jwtProvider := providers.NewJWTProvider()
 
 	userRepo := repositories.NewUserRepo(postgresPool)
+	categoryRepo := repositories.NewCategoryRepository(postgresPool)
 
 	authMiddleware := middlewares.NewAuthMiddleware(userRepo, jwtProvider, logger)
 
 	userService := services.NewUserService(userRepo, logger)
 	authService := services.NewAuthService(userRepo, logger, jwtProvider)
+	categoryService := services.NewCategoryService(categoryRepo, logger)
 
 	userHandler := handlers.NewUserHandler(userService, logger)
 	authHandler := handlers.NewAuthHandler(authService, logger)
+	categoryHandler := handlers.NewCategoryHandler(categoryService, logger)
 
 	r.Route("/users", func(r chi.Router) {
 		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Post("/", userHandler.HandleCreateAdminAccount)
@@ -55,6 +58,11 @@ func main() {
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/login", authHandler.HandleLogin)
+	})
+
+	r.Route("/categories", func(r chi.Router) {
+		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Post("/", categoryHandler.HandleCreateCategory)
+		r.With(authMiddleware.AllowAccounts(types.AnyAccount)).Get("/", categoryHandler.HandleGetAllCategories)
 	})
 
 	server := http.Server{
