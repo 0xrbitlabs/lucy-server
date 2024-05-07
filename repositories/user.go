@@ -78,3 +78,11 @@ func (repo UserRepo) CountByPhone(phone string) (int, error) {
 	}
 	return count, nil
 }
+
+func (repo UserRepo) UpdatePassword(userId, password string) error {
+	_, err := repo.db.Exec("update users set password=$1 where id=$2", password, userId)
+	if err != nil {
+		return fmt.Errorf("Error while updating user password: %w", err)
+	}
+	return nil
+}

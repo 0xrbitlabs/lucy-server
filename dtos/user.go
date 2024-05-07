@@ -22,3 +22,23 @@ func (dto CreateAdminDTO) Validate() map[string]string {
 	}
 	return nil
 }
+
+type ChangeUserPasswordDTO struct {
+	UserID      string
+	OldPassword string `json:"old"`
+	NewPassword string `json:"new"`
+}
+
+func (dto ChangeUserPasswordDTO) Validate() map[string]string {
+	errors := make(map[string]string)
+	if dto.OldPassword == "" {
+		errors["old"] = "old can not be empty"
+	}
+	if dto.NewPassword == "" {
+		errors["new"] = "new can not be empty"
+	}
+	if len(errors) > 0 {
+		return errors
+	}
+	return nil
+}

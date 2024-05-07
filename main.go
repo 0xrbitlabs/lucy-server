@@ -50,6 +50,7 @@ func main() {
 
 	r.Route("/users", func(r chi.Router) {
 		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Post("/", userHandler.HandleCreateAdminAccount)
+		r.With(authMiddleware.AllowAccounts(types.AnyAccount)).Put("/password", userHandler.HandleChangeUserPassword)
 	})
 
 	r.Route("/auth", func(r chi.Router) {

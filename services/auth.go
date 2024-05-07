@@ -45,7 +45,7 @@ func (s AuthService) Login(data dtos.LoginDTO) (*string, error) {
 				ErrorCode:  types.ErrWrongPassword,
 			}
 		}
-		s.logger.Error("Error while comparing hash and password", err)
+    s.logger.Error("Error while comparing hash and password:", err)
 		return nil, types.ServiceErrInternal
 	}
 	authToken, err := s.jwt.Encode(map[string]interface{}{

@@ -13,4 +13,5 @@ type UserService interface {
 	CreateAdminAccount(dtos.CreateAdminDTO) error
 	GetAllUsers() (*[]models.User, error)
 	GetUserByID(id string) (*models.User, error)
+	ChangePassword(dtos.ChangeUserPasswordDTO) error
 }
