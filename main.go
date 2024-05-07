@@ -5,9 +5,11 @@ import (
 	"log/slog"
 	"lucy/db"
 	"lucy/handlers"
+	"lucy/middlewares"
 	"lucy/providers"
 	"lucy/repositories"
 	"lucy/services"
+	"lucy/types"
 	"net"
 	"net/http"
 	"os"
@@ -38,6 +40,8 @@ func main() {
 
 	userRepo := repositories.NewUserRepo(postgresPool)
 
+	authMiddleware := middlewares.NewAuthMiddleware(userRepo, jwtProvider, logger)
+
 	userService := services.NewUserService(userRepo, logger)
 	authService := services.NewAuthService(userRepo, logger, jwtProvider)
 
@@ -45,7 +49,7 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService, logger)
 
 	r.Route("/users", func(r chi.Router) {
-		r.Post("/", userHandler.HandleCreateAdminAccount)
+		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Post("/", userHandler.HandleCreateAdminAccount)
 	})
 
 	r.Route("/auth", func(r chi.Router) {
