@@ -4,6 +4,7 @@ type AccountType = string
 
 const (
 	AdminAccount   AccountType = "admin"
-	SellerAccount              = "seller"
-	RegularAccount             = "regular"
+	SellerAccount  AccountType = "seller"
+	RegularAccount AccountType = "regular"
+	AnyAccount     AccountType = ""
 )
