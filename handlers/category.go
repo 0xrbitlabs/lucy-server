@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"lucy/dtos"
 	"lucy/interfaces"
+	"lucy/models"
 	"lucy/types"
 	"net/http"
 )
@@ -42,7 +43,12 @@ func (h CategoryHandler) HandleCreateCategory(w http.ResponseWriter, r *http.Req
 }
 
 func (h CategoryHandler) HandleGetAllCategories(w http.ResponseWriter, r *http.Request) {
-	categories, err := h.categoryService.GetAllCategories()
+	currUser, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	categories, err := h.categoryService.GetAllCategories(currUser)
 	if err != nil {
 		WriteError(w, err.(types.ServiceError))
 		return

@@ -3,6 +3,7 @@ package interfaces
 import (
 	"lucy/models"
 	"lucy/repositories"
+	"lucy/types"
 )
 
 type UserRepo interface {
@@ -16,6 +17,6 @@ type UserRepo interface {
 type CategoryRepo interface {
 	Insert(*models.Category) error
 	GetCategory(filter repositories.Filter) (*models.Category, error)
-	GetAll() (*[]models.Category, error)
+	GetAll(callerAccountType types.AccountType) (*[]models.Category, error)
 	CountByLabel(label string) (int, error)
 }

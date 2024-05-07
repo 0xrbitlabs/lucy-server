@@ -35,8 +35,10 @@ func (s CategoryService) CreateCategory(data dtos.CreateCategoryDTO) error {
 		}
 	}
 	category := &models.Category{
-		ID:    ulid.Make().String(),
-		Label: data.Label,
+		ID:          ulid.Make().String(),
+		Label:       data.Label,
+		Description: data.Description,
+		Enabled:     data.Enabled,
 	}
 	err = s.categoryRepo.Insert(category)
 	if err != nil {
@@ -46,8 +48,8 @@ func (s CategoryService) CreateCategory(data dtos.CreateCategoryDTO) error {
 	return nil
 }
 
-func (s CategoryService) GetAllCategories() (*[]models.Category, error) {
-	categories, err := s.categoryRepo.GetAll()
+func (s CategoryService) GetAllCategories(currUser *models.User) (*[]models.Category, error) {
+	categories, err := s.categoryRepo.GetAll(currUser.AccountType)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, types.ServiceErrInternal

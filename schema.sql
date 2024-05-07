@@ -11,5 +11,7 @@ create table if not exists users (
 
 create table if not exists categories (
   id text not null primary key,
-  label text not null unique
+  label text not null unique,
+  description text not null,
+  enabled boolean not null
 );

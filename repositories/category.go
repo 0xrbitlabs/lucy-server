@@ -21,8 +21,8 @@ func NewCategoryRepository(db *sqlx.DB) CategoryRepo {
 func (r CategoryRepo) Insert(category *models.Category) error {
 	_, err := r.db.NamedExec(
 		`
-      insert into categories(id, label)
-      values(:id, :label)
+      insert into categories(id, label, description, enabled)
+      values(:id, :label, :description, :enabled)
     `,
 		category,
 	)
@@ -49,9 +49,13 @@ func (r CategoryRepo) GetCategory(filter Filter) (*models.Category, error) {
 	return category, nil
 }
 
-func (r CategoryRepo) GetAll() (*[]models.Category, error) {
+func (r CategoryRepo) GetAll(callerAccountType types.AccountType) (*[]models.Category, error) {
 	categories := []models.Category{}
-	err := r.db.Select(&categories, "select * from categories")
+	query := "select * from categories "
+	if callerAccountType != types.AdminAccount {
+		query += "where enabled=true"
+	}
+	err := r.db.Select(&categories, query)
 	if err != nil {
 		return nil, fmt.Errorf("Error while getting all categories: %w", err)
 	}

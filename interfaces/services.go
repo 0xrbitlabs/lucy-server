@@ -18,5 +18,5 @@ type UserService interface {
 
 type CategoryService interface {
 	CreateCategory(dtos.CreateCategoryDTO) error
-  GetAllCategories() (*[]models.Category, error)
+	GetAllCategories(currUser *models.User) (*[]models.Category, error)
 }
