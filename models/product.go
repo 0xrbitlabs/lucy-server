@@ -2,6 +2,7 @@ package models
 
 type Product struct {
 	ID          string `json:"id" db:"id"`
+	Owner       string `json:"owner" db:"owner"`
 	CategoryID  string `json:"category_id" db:"category_id"`
 	Label       string `json:"label" db:"label"`
 	Description string `json:"description" db:"description"`

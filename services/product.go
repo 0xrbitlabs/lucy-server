@@ -34,7 +34,7 @@ func NewProductService(
 	}
 }
 
-func (s ProductService) CreateProduct(data *dtos.CreateProductDTO) error {
+func (s ProductService) CreateProduct(data *dtos.CreateProductDTO, owner *models.User) error {
 	_, err := s.categoryRepo.GetCategory(repositories.Filter{
 		Field: "id",
 		Value: data.CategoryID,
@@ -51,16 +51,17 @@ func (s ProductService) CreateProduct(data *dtos.CreateProductDTO) error {
 	}
 	product := &models.Product{
 		ID:          ulid.Make().String(),
+		Owner:       owner.ID,
 		CategoryID:  data.CategoryID,
 		Label:       data.Label,
 		Description: data.Description,
 		Price:       data.Price,
 		Image:       data.Image,
 	}
-  err = s.productRepo.Insert(product)
-  if err!= nil {
-    s.logger.Error(err.Error())
-    return  types.ServiceErrInternal
-  }
+	err = s.productRepo.Insert(product)
+	if err != nil {
+		s.logger.Error(err.Error())
+		return types.ServiceErrInternal
+	}
 	return nil
 }

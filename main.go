@@ -79,7 +79,7 @@ func main() {
 	})
 
 	r.Route("/products", func(r chi.Router) {
-		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Route("/", func(r chi.Router) {
+		r.With(authMiddleware.AllowAccounts(types.SellerAccount)).Route("/", func(r chi.Router) {
 			r.Post("/", productHandler.HandleCreateProduct)
 		})
 	})

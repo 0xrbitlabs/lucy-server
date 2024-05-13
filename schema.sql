@@ -18,6 +18,7 @@ create table if not exists categories (
 
 create table if not exists products (
   id  text not null primary key,
+  owner text not null references users(id),
   category_id text not null references categories(id),
   label text not null,
   description text not null,

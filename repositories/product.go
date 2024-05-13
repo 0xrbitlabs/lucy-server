@@ -19,11 +19,11 @@ func (r ProductRepo) Insert(data *models.Product) error {
 	_, err := r.db.NamedExec(
 		`
       insert into products(
-        id, category_id, label,
+        id, owner, category_id, label,
         description, price, image
       )
       values(
-        :id, :category_id, :label,
+        :id, :owner, :category_id, :label,
         :description, :price, :image
       )
     `,

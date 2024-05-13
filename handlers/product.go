@@ -3,12 +3,13 @@ package handlers
 import (
 	"encoding/json"
 	"lucy/dtos"
+	"lucy/models"
 	"lucy/types"
 	"net/http"
 )
 
 type ProductService interface {
-	CreateProduct(*dtos.CreateProductDTO) error
+	CreateProduct(*dtos.CreateProductDTO, *models.User) error
 }
 
 type ProductHandler struct {
@@ -24,6 +25,11 @@ func NewProductHandler(productService ProductService, logger Logger) ProductHand
 }
 
 func (h ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
+	currUser, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 	payload := &dtos.CreateProductDTO{}
 	err := json.NewDecoder(r.Body).Decode(payload)
 	if err != nil {
@@ -31,7 +37,7 @@ func (h ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = h.productService.CreateProduct(payload)
+	err = h.productService.CreateProduct(payload, currUser)
 	if err != nil {
 		WriteError(w, err.(types.ServiceError))
 		return
