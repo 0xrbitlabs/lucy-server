@@ -3,18 +3,22 @@ package handlers
 import (
 	"encoding/json"
 	"lucy/dtos"
-	"lucy/interfaces"
 	"lucy/models"
 	"lucy/types"
 	"net/http"
 )
 
-type CategoryHandler struct {
-	categoryService interfaces.CategoryService
-	logger          interfaces.Logger
+type CategoryService interface {
+	CreateCategory(dtos.CreateCategoryDTO) error
+	GetAllCategories(currUser *models.User) (*[]models.Category, error)
 }
 
-func NewCategoryHandler(categoryService interfaces.CategoryService, logger interfaces.Logger) CategoryHandler {
+type CategoryHandler struct {
+	categoryService CategoryService
+	logger          Logger
+}
+
+func NewCategoryHandler(categoryService CategoryService, logger Logger) CategoryHandler {
 	return CategoryHandler{
 		categoryService: categoryService,
 		logger:          logger,

@@ -3,17 +3,31 @@ package handlers
 import (
 	"encoding/json"
 	"lucy/dtos"
-	"lucy/interfaces"
 	"lucy/types"
 	"net/http"
 )
 
-type AuthHandler struct {
-	service interfaces.AuthService
-	logger  interfaces.Logger
+type AuthService interface {
+	Login(data dtos.LoginDTO) (*string, error)
 }
 
-func NewAuthHandler(service interfaces.AuthService, logger interfaces.Logger) AuthHandler {
+type Logger interface {
+	Debug(msg string, args ...any)
+	Error(msg string, args ...any)
+	Info(msg string, args ...any)
+}
+
+type JWTProvider interface {
+	Encode(claims map[string]interface{}) (string, error)
+	Decode(token string) (map[string]interface{}, error)
+}
+
+type AuthHandler struct {
+	service AuthService
+	logger  Logger
+}
+
+func NewAuthHandler(service AuthService, logger Logger) AuthHandler {
 	return AuthHandler{
 		service: service,
 		logger:  logger,

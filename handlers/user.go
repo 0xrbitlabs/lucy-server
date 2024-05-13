@@ -3,17 +3,24 @@ package handlers
 import (
 	"encoding/json"
 	"lucy/dtos"
-	"lucy/interfaces"
+	"lucy/models"
 	"lucy/types"
 	"net/http"
 )
 
-type UserHandler struct {
-	service interfaces.UserService
-	logger  interfaces.Logger
+type UserService interface {
+	CreateAdminAccount(dtos.CreateAdminDTO) error
+	GetAllUsers() (*[]models.User, error)
+	GetUserByID(id string) (*models.User, error)
+	ChangePassword(dtos.ChangeUserPasswordDTO) error
 }
 
-func NewUserHandler(service interfaces.UserService, logger interfaces.Logger) UserHandler {
+type UserHandler struct {
+	service UserService
+	logger  Logger
+}
+
+func NewUserHandler(service UserService, logger Logger) UserHandler {
 	return UserHandler{
 		service: service,
 		logger:  logger,
@@ -31,7 +38,7 @@ func (h UserHandler) HandleCreateAdminAccount(w http.ResponseWriter, r *http.Req
 	errs := payload.Validate()
 	if errs != nil {
 		WriteBadReqErr(w, errs)
-    return
+		return
 	}
 	err = h.service.CreateAdminAccount(*payload)
 	if err != nil {
@@ -52,7 +59,7 @@ func (h UserHandler) HandleChangeUserPassword(w http.ResponseWriter, r *http.Req
 	errs := payload.Validate()
 	if errs != nil {
 		WriteBadReqErr(w, errs)
-    return
+		return
 	}
 	err = h.service.ChangePassword(*payload)
 	if err != nil {
