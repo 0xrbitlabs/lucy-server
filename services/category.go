@@ -2,20 +2,28 @@ package services
 
 import (
 	"lucy/dtos"
-	"lucy/interfaces"
+	"lucy/handlers"
 	"lucy/models"
+	"lucy/repositories"
 	"lucy/types"
 	"net/http"
 
 	"github.com/oklog/ulid/v2"
 )
 
-type CategoryService struct {
-	categoryRepo interfaces.CategoryRepo
-	logger       interfaces.Logger
+type CategoryRepo interface {
+	Insert(*models.Category) error
+	GetCategory(repositories.Filter) (*models.Category, error)
+	GetAll(types.AccountType) (*[]models.Category, error)
+	CountByLabel(string) (int, error)
 }
 
-func NewCategoryService(categoryRepo interfaces.CategoryRepo, logger interfaces.Logger) CategoryService {
+type CategoryService struct {
+	categoryRepo CategoryRepo
+	logger       handlers.Logger
+}
+
+func NewCategoryService(categoryRepo CategoryRepo, logger handlers.Logger) CategoryService {
 	return CategoryService{
 		categoryRepo: categoryRepo,
 		logger:       logger,

@@ -3,7 +3,7 @@ package services
 import (
 	"errors"
 	"lucy/dtos"
-	"lucy/interfaces"
+	"lucy/handlers"
 	"lucy/models"
 	"lucy/repositories"
 	"lucy/types"
@@ -14,11 +14,11 @@ import (
 )
 
 type UserService struct {
-	userRepo interfaces.UserRepo
-	logger   interfaces.Logger
+	userRepo UserRepo
+	logger   handlers.Logger
 }
 
-func NewUserService(userRepo interfaces.UserRepo, logger interfaces.Logger) UserService {
+func NewUserService(userRepo UserRepo, logger handlers.Logger) UserService {
 	return UserService{
 		userRepo: userRepo,
 		logger:   logger,

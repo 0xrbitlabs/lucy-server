@@ -3,7 +3,8 @@ package services
 import (
 	"errors"
 	"lucy/dtos"
-	"lucy/interfaces"
+	"lucy/handlers"
+	"lucy/models"
 	"lucy/repositories"
 	"lucy/types"
 	"net/http"
@@ -11,13 +12,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthService struct {
-	userRepo interfaces.UserRepo
-	logger   interfaces.Logger
-	jwt      interfaces.JWTProvider
+type UserRepo interface {
+	Insert(*models.User) error
+	GetUser(filter repositories.Filter) (*models.User, error)
+	CountByPhone(phone string) (int, error)
+	GetAll() (*[]models.User, error)
+	UpdatePassword(userId, password string) error
 }
 
-func NewAuthService(userRepo interfaces.UserRepo, logger interfaces.Logger, jwt interfaces.JWTProvider) AuthService {
+type AuthService struct {
+	userRepo UserRepo
+	logger   handlers.Logger
+	jwt      handlers.JWTProvider
+}
+
+func NewAuthService(userRepo UserRepo, logger handlers.Logger, jwt handlers.JWTProvider) AuthService {
 	return AuthService{
 		userRepo: userRepo,
 		logger:   logger,
@@ -45,7 +54,7 @@ func (s AuthService) Login(data dtos.LoginDTO) (*string, error) {
 				ErrorCode:  types.ErrWrongPassword,
 			}
 		}
-    s.logger.Error("Error while comparing hash and password:", err)
+		s.logger.Error("Error while comparing hash and password:", err)
 		return nil, types.ServiceErrInternal
 	}
 	authToken, err := s.jwt.Encode(map[string]interface{}{

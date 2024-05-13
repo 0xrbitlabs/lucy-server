@@ -2,23 +2,24 @@ package middlewares
 
 import (
 	"context"
-	"lucy/interfaces"
+	"lucy/handlers"
 	"lucy/providers"
 	"lucy/repositories"
+	"lucy/services"
 	"lucy/types"
 	"net/http"
 )
 
 type AuthMiddleware struct {
-	userRepo interfaces.UserRepo
-	jwt      providers.JWTProvider
-	logger   interfaces.Logger
+	userRepo services.UserRepo
+	jwt      handlers.JWTProvider
+	logger   handlers.Logger
 }
 
 func NewAuthMiddleware(
-	userRepo interfaces.UserRepo,
+	userRepo services.UserRepo,
 	jwt providers.JWTProvider,
-	logger interfaces.Logger,
+	logger handlers.Logger,
 ) AuthMiddleware {
 	return AuthMiddleware{
 		userRepo: userRepo,
