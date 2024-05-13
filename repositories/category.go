@@ -35,7 +35,7 @@ func (r CategoryRepo) Insert(category *models.Category) error {
 
 func (r CategoryRepo) GetCategory(filter Filter) (*models.Category, error) {
 	category := &models.Category{}
-	query := fmt.Sprintf("select * from category where %s=$1", filter.Field)
+	query := fmt.Sprintf("select * from categories where %s=$1", filter.Field)
 	err := r.db.Get(
 		category,
 		query,

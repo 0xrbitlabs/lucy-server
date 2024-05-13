@@ -37,4 +37,6 @@ const (
 	ErrDuplicateLabel = "DuplicateLabel"
 	ErrWrongPassword  = "WrongPassword"
 	ErrTokenEncoding  = "TokenEncoding"
+
+  CategoryNotFound = "CategoryNotFound"
 )
