@@ -28,14 +28,11 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
-		AllowedOrigins: []string{"https://*", "http://*"},
-		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
 	r.Use(
@@ -75,6 +72,7 @@ func main() {
 	r.Route("/categories", func(r chi.Router) {
 		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Post("/", categoryHandler.HandleCreateCategory)
 		r.With(authMiddleware.AllowAccounts(types.AnyAccount)).Get("/", categoryHandler.HandleGetAllCategories)
+		r.With(authMiddleware.AllowAccounts(types.AdminAccount)).Patch("/enabled", categoryHandler.HandleToggleEnabled)
 	})
 
 	server := http.Server{

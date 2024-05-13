@@ -10,7 +10,8 @@ import (
 
 type CategoryService interface {
 	CreateCategory(dtos.CreateCategoryDTO) error
-	GetAllCategories(currUser *models.User) (*[]models.Category, error)
+	GetAllCategories(*models.User) (*[]models.Category, error)
+	ToggleEnabled(*dtos.ToggleEnabledDTO) error
 }
 
 type CategoryHandler struct {
@@ -60,4 +61,20 @@ func (h CategoryHandler) HandleGetAllCategories(w http.ResponseWriter, r *http.R
 	WriteData(w, http.StatusOK, map[string]interface{}{
 		"categories": *categories,
 	})
+}
+
+func (h CategoryHandler) HandleToggleEnabled(w http.ResponseWriter, r *http.Request) {
+	payload := &dtos.ToggleEnabledDTO{}
+	err := json.NewDecoder(r.Body).Decode(payload)
+	if err != nil {
+		h.logger.Error("Error while decoding request body: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = h.categoryService.ToggleEnabled(payload)
+	if err != nil {
+		WriteError(w, err.(types.ServiceError))
+    return
+	}
+	WriteData(w, http.StatusOK, nil)
 }

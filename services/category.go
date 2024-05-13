@@ -16,6 +16,7 @@ type CategoryRepo interface {
 	GetCategory(repositories.Filter) (*models.Category, error)
 	GetAll(types.AccountType) (*[]models.Category, error)
 	CountByLabel(string) (int, error)
+	ToggleEnabled([]string, bool) error
 }
 
 type CategoryService struct {
@@ -63,4 +64,13 @@ func (s CategoryService) GetAllCategories(currUser *models.User) (*[]models.Cate
 		return nil, types.ServiceErrInternal
 	}
 	return categories, nil
+}
+
+func (s CategoryService) ToggleEnabled(data *dtos.ToggleEnabledDTO) error {
+	err := s.categoryRepo.ToggleEnabled(data.IDs, data.Status)
+	if err != nil {
+		s.logger.Error(err.Error())
+		return types.ServiceErrInternal
+	}
+	return nil
 }

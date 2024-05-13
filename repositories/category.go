@@ -8,6 +8,7 @@ import (
 	"lucy/types"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type CategoryRepo struct {
@@ -69,4 +70,16 @@ func (r CategoryRepo) CountByLabel(label string) (int, error) {
 		return count, fmt.Errorf("Error while counting categories by label: %w", err)
 	}
 	return count, nil
+}
+
+func (r CategoryRepo) ToggleEnabled(ids []string, status bool) error {
+	_, err := r.db.Exec(
+		"update categories set enabled = $1 where id = ANY($2)",
+    status,
+		pq.StringArray(ids),
+	)
+	if err != nil {
+		return fmt.Errorf("Error while toggling enabled status: %w", err)
+	}
+	return nil
 }

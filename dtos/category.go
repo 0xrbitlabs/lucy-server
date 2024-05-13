@@ -19,3 +19,8 @@ func (dto CreateCategoryDTO) Validate() map[string]string {
 	}
 	return nil
 }
+
+type ToggleEnabledDTO struct {
+	IDs    []string `json:"ids"`
+	Status bool     `json:"status"`
+}
