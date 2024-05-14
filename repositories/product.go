@@ -59,12 +59,23 @@ func (r ProductRepo) GetAll(user *models.User) (*[]models.Product, error) {
 	return &products, nil
 }
 
-func (r ProductRepo) ToggleStatus(ids []string, status bool) error {
-	_, err := r.db.Exec(
-		"update products set enabled = $1 where id = ANY($2)",
-		status,
-		pq.StringArray(ids),
-	)
+func (r ProductRepo) ToggleStatus(ids []string, status bool, user *models.User) error {
+	var err error
+	switch user.AccountType {
+	case types.AdminAccount:
+		_, err = r.db.Exec(
+			"update products set enabled = $1 where id = ANY($2)",
+			status,
+			pq.StringArray(ids),
+		)
+	case types.SellerAccount:
+		_, err = r.db.Exec(
+			"update products set enabled = $1 where id = ANY($2) and owner=$3",
+			status,
+			pq.StringArray(ids),
+			user.ID,
+		)
+	}
 	if err != nil {
 		return fmt.Errorf("Error while toggling product status: %w", err)
 	}

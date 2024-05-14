@@ -15,7 +15,7 @@ import (
 type ProductRepo interface {
 	Insert(*models.Product) error
 	GetAll(*models.User) (*[]models.Product, error)
-	ToggleStatus(ids []string, status bool) error
+	ToggleStatus([]string, bool, *models.User) error
 }
 
 type ProductService struct {
@@ -78,8 +78,8 @@ func (s ProductService) GetAll(user *models.User) (*[]models.Product, error) {
 	return data, nil
 }
 
-func (s ProductService) ToggleStatus(data *dtos.ToggleProductStatusDTO) error {
-	err := s.productRepo.ToggleStatus(data.IDs, data.Status)
+func (s ProductService) ToggleStatus(data *dtos.ToggleProductStatusDTO, user *models.User) error {
+	err := s.productRepo.ToggleStatus(data.IDs, data.Status, user)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return err

@@ -11,7 +11,7 @@ import (
 type ProductService interface {
 	CreateProduct(*dtos.CreateProductDTO, *models.User) error
 	GetAll(*models.User) (*[]models.Product, error)
-	ToggleStatus(*dtos.ToggleProductStatusDTO) error
+	ToggleStatus(*dtos.ToggleProductStatusDTO, *models.User) error
 }
 
 type ProductHandler struct {
@@ -56,6 +56,7 @@ func (h ProductHandler) HandleGetAllProducts(w http.ResponseWriter, r *http.Requ
 }
 
 func (h ProductHandler) HandleToggleEnabled(w http.ResponseWriter, r *http.Request) {
+	currUser, _ := r.Context().Value("user").(*models.User)
 	payload := &dtos.ToggleProductStatusDTO{}
 	err := json.NewDecoder(r.Body).Decode(payload)
 	if err != nil {
@@ -63,7 +64,7 @@ func (h ProductHandler) HandleToggleEnabled(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	err = h.productService.ToggleStatus(payload)
+	err = h.productService.ToggleStatus(payload, currUser)
 	if err != nil {
 		WriteError(w, err.(types.ServiceError))
 		return
