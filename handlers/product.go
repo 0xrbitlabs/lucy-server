@@ -10,7 +10,8 @@ import (
 
 type ProductService interface {
 	CreateProduct(*dtos.CreateProductDTO, *models.User) error
-	GetAll() (*[]models.Product, error)
+	GetAll(*models.User) (*[]models.Product, error)
+	ToggleStatus(*dtos.ToggleProductStatusDTO) error
 }
 
 type ProductHandler struct {
@@ -26,11 +27,7 @@ func NewProductHandler(productService ProductService, logger Logger) ProductHand
 }
 
 func (h ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Request) {
-	currUser, ok := r.Context().Value("user").(*models.User)
-	if !ok {
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+	currUser, _ := r.Context().Value("user").(*models.User)
 	payload := &dtos.CreateProductDTO{}
 	err := json.NewDecoder(r.Body).Decode(payload)
 	if err != nil {
@@ -44,11 +41,11 @@ func (h ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	WriteData(w, http.StatusCreated, nil)
-	return
 }
 
 func (h ProductHandler) HandleGetAllProducts(w http.ResponseWriter, r *http.Request) {
-	data, err := h.productService.GetAll()
+	currUser, _ := r.Context().Value("user").(*models.User)
+	data, err := h.productService.GetAll(currUser)
 	if err != nil {
 		WriteError(w, err.(types.ServiceError))
 		return
@@ -56,5 +53,20 @@ func (h ProductHandler) HandleGetAllProducts(w http.ResponseWriter, r *http.Requ
 	WriteData(w, http.StatusOK, map[string]interface{}{
 		"products": *data,
 	})
-	return
+}
+
+func (h ProductHandler) HandleToggleEnabled(w http.ResponseWriter, r *http.Request) {
+	payload := &dtos.ToggleProductStatusDTO{}
+	err := json.NewDecoder(r.Body).Decode(payload)
+	if err != nil {
+		h.logger.Error("Error while decoding request body: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = h.productService.ToggleStatus(payload)
+	if err != nil {
+		WriteError(w, err.(types.ServiceError))
+		return
+	}
+	WriteData(w, http.StatusOK, nil)
 }

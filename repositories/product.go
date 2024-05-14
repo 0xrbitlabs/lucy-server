@@ -3,8 +3,10 @@ package repositories
 import (
 	"fmt"
 	"lucy/models"
+	"lucy/types"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 )
 
 type ProductRepo struct {
@@ -35,14 +37,36 @@ func (r ProductRepo) Insert(data *models.Product) error {
 	return nil
 }
 
-func (r ProductRepo) GetAll() (*[]models.Product, error) {
+func (r ProductRepo) GetAll(user *models.User) (*[]models.Product, error) {
+	var err error
 	products := []models.Product{}
-	err := r.db.Select(
-		&products,
-		"select * from products",
-	)
+	switch user.AccountType {
+	case types.AdminAccount:
+		err = r.db.Select(
+			&products,
+			"select * from products",
+		)
+	case types.SellerAccount:
+		err = r.db.Select(
+			&products,
+			"select * from products where owner=$1",
+			user.ID,
+		)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("Error while retrieving all products: %w", err)
 	}
 	return &products, nil
+}
+
+func (r ProductRepo) ToggleStatus(ids []string, status bool) error {
+	_, err := r.db.Exec(
+		"update products set enabled = $1 where id = ANY($2)",
+		status,
+		pq.StringArray(ids),
+	)
+	if err != nil {
+		return fmt.Errorf("Error while toggling product status: %w", err)
+	}
+	return nil
 }

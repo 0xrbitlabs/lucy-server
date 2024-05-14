@@ -7,3 +7,8 @@ type CreateProductDTO struct {
 	Description string `json:"description"`
 	Image       string `json:"image"`
 }
+
+type ToggleProductStatusDTO struct {
+	IDs []string `json:"ids"`
+  Status bool `json:"status"`
+}
