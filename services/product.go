@@ -58,6 +58,7 @@ func (s ProductService) CreateProduct(data *dtos.CreateProductDTO, owner *models
 		Description: data.Description,
 		Price:       data.Price,
 		Image:       data.Image,
+		Enabled:     true,
 	}
 	err = s.productRepo.Insert(product)
 	if err != nil {

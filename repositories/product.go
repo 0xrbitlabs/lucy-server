@@ -20,11 +20,11 @@ func (r ProductRepo) Insert(data *models.Product) error {
 		`
       insert into products(
         id, owner, category_id, label,
-        description, price, image
+        description, price, image, enabled
       )
       values(
         :id, :owner, :category_id, :label,
-        :description, :price, :image
+        :description, :price, :image, :enabled
       )
     `,
 		data,

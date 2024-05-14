@@ -23,5 +23,6 @@ create table if not exists products (
   label text not null,
   description text not null,
   price numeric not null,
-  image text not null
+  image text not null,
+  enabled boolean not null
 );
