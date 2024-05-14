@@ -10,6 +10,7 @@ import (
 
 type ProductService interface {
 	CreateProduct(*dtos.CreateProductDTO, *models.User) error
+	GetAll() (*[]models.Product, error)
 }
 
 type ProductHandler struct {
@@ -43,5 +44,17 @@ func (h ProductHandler) HandleCreateProduct(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	WriteData(w, http.StatusCreated, nil)
+	return
+}
+
+func (h ProductHandler) HandleGetAllProducts(w http.ResponseWriter, r *http.Request) {
+	data, err := h.productService.GetAll()
+	if err != nil {
+		WriteError(w, err.(types.ServiceError))
+		return
+	}
+	WriteData(w, http.StatusOK, map[string]interface{}{
+		"products": *data,
+	})
 	return
 }

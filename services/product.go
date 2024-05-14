@@ -14,6 +14,7 @@ import (
 
 type ProductRepo interface {
 	Insert(*models.Product) error
+	GetAll() (*[]models.Product, error)
 }
 
 type ProductService struct {
@@ -64,4 +65,13 @@ func (s ProductService) CreateProduct(data *dtos.CreateProductDTO, owner *models
 		return types.ServiceErrInternal
 	}
 	return nil
+}
+
+func (s ProductService) GetAll() (*[]models.Product, error) {
+	data, err := s.productRepo.GetAll()
+	if err != nil {
+		s.logger.Error(err.Error())
+		return nil, types.ServiceErrInternal
+	}
+	return data, nil
 }

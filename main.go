@@ -82,6 +82,7 @@ func main() {
 		r.With(authMiddleware.AllowAccounts(types.SellerAccount)).Route("/", func(r chi.Router) {
 			r.Post("/", productHandler.HandleCreateProduct)
 		})
+		r.With(authMiddleware.AllowAccounts(types.AnyAccount)).Get("/", productHandler.HandleGetAllProducts)
 	})
 
 	server := http.Server{
