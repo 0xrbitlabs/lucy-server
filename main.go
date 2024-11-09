@@ -1,13 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"io"
+	"encoding/json"
+	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
+	"github.com/joseph0x45/lucy/handlers"
+	"github.com/joseph0x45/lucy/repository"
+	whatsapptypes "github.com/joseph0x45/lucy/whatsapp_types"
+	_ "github.com/lib/pq"
 )
 
 func init() {
@@ -29,22 +36,66 @@ func HandleWebhookConfiguration(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusForbidden)
 }
 
+func connectToDB() *sqlx.DB {
+	db, err := sqlx.Open("postgres", os.Getenv("DB_URL"))
+	if err != nil {
+		panic(err)
+	}
+	log.Println("Connected to Postgres")
+	return db
+}
+
 func main() {
 	r := chi.NewRouter()
+	r.Use(
+		middleware.Logger,
+		middleware.Recoverer,
+	)
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		AddSource: true,
+	}))
+
+	db := connectToDB()
+
+	userRepo := repository.NewUserRepo(db)
+	sessionRepo := repository.NewSessionRepo(db)
+	// productRepo := repository.NewProductRepo(db)
+	authCodeRepo := repository.NewAuthCodeRepo(db)
+
+	authHandler := handlers.NewAuthHandler(
+		userRepo,
+		sessionRepo,
+		logger,
+		authCodeRepo,
+	)
 
 	port := os.Getenv("PORT")
 
+	r.Get("/webhook", HandleWebhookConfiguration)
+
 	r.Post("/webhook", func(w http.ResponseWriter, r *http.Request) {
-		data, err := io.ReadAll(r.Body)
+		payload := &whatsapptypes.Payload{}
+		err := json.NewDecoder(r.Body).Decode(payload)
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Println("Error while decoding request body:", err.Error())
+			w.WriteHeader(http.StatusOK)
+			return
 		}
-		fmt.Println(string(data))
-		w.WriteHeader(http.StatusOK)
+		envelope := whatsapptypes.Envelope{
+			Object: payload.Object,
+		}
+		if len(payload.Entry) > 0 {
+			envelope.Entry = payload.Entry[0]
+		} else {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 	})
 
+	authHandler.RegisterRoutes(r)
+
 	// TODO: Make this better
-	fmt.Println("Started server on port", port)
+	log.Println("Started server on port", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		panic(err)
 	}

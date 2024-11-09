@@ -1,4 +1,4 @@
-package main
+package whatsapptypes
 
 const (
 	TextMessage MessageType = "text"
@@ -47,4 +47,14 @@ type Change struct {
 type Entry struct {
 	ID      string   `json:"id"`
 	Changes []Change `json:"changes"`
+}
+
+type Payload struct {
+	Object string  `json:"object"`
+	Entry  []Entry `json:"entry"`
+}
+
+type Envelope struct {
+	Object string `json:"object"`
+	Entry  Entry  `json:"entry"`
 }

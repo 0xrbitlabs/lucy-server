@@ -26,8 +26,22 @@ type ProductCategory struct {
 type Product struct {
 	ID          string  `json:"id" db:"id"`
 	Label       string  `json:"label" db:"label"`
+	Category    string  `json:"category" db:"category"`
 	Description string  `json:"description" db:"description"`
 	Images      string  `json:"image" db:"images"`
 	Price       float64 `json:"price" db:"price"`
 	ListedBy    string  `json:"listed_by" db:"listedby"`
+}
+
+type Session struct {
+	ID    string `json:"id" db:"id"`
+	Valid string `json:"valid" db:"valid"`
+	User  string `json:"user" db:"user"`
+}
+
+type AuthCode struct {
+	ID           int    `db:"id"`
+	Code         string `db:"code"`
+	Used         bool   `db:"used"`
+	GeneratedFor string `db:"generated_for"`
 }
