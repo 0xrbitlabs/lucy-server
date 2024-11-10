@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/joseph0x45/lucy/handlers"
+	"github.com/joseph0x45/lucy/providers"
 	"github.com/joseph0x45/lucy/repository"
 	whatsapptypes "github.com/joseph0x45/lucy/whatsapp_types"
 	_ "github.com/lib/pq"
@@ -57,6 +58,8 @@ func main() {
 
 	db := connectToDB()
 
+  txProvider := providers.NewTxProvider(db) 
+
 	userRepo := repository.NewUserRepo(db)
 	sessionRepo := repository.NewSessionRepo(db)
 	// productRepo := repository.NewProductRepo(db)
@@ -67,6 +70,7 @@ func main() {
 		sessionRepo,
 		logger,
 		authCodeRepo,
+    txProvider,
 	)
 
 	port := os.Getenv("PORT")

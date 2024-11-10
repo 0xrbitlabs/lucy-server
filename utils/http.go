@@ -6,8 +6,8 @@ import (
 )
 
 func write(w http.ResponseWriter, status int, data interface{}, key string) {
-	w.WriteHeader(status)
   w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
 	if data == nil {
 		data = map[string]interface{}{}
 	}

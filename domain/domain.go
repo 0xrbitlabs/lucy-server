@@ -35,8 +35,8 @@ type Product struct {
 
 type Session struct {
 	ID    string `json:"id" db:"id"`
-	Valid string `json:"valid" db:"valid"`
-	User  string `json:"user" db:"user"`
+	Valid bool `json:"valid" db:"valid"`
+	UserID  string `json:"user_id" db:"user_id"`
 }
 
 type AuthCode struct {

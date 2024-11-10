@@ -17,24 +17,29 @@ func NewSessionRepo(db *sqlx.DB) *SessionRepo {
 	return &SessionRepo{db}
 }
 
-func (r *SessionRepo) CreateSession(session *domain.Session) error {
+func (r *SessionRepo) CreateSession(tx *sqlx.Tx, session *domain.Session) error {
 	const query = `
     insert into sessions (
-      id, valid, user
+      id, valid, user_id
     )
     values (
-      :id, :valid, :user
+      :id, :valid, :user_id
     )
   `
-	_, err := r.db.NamedExec(query, session)
+	var err error
+	if tx != nil {
+		_, err = tx.NamedExec(query, session)
+	}else {
+    _, err = r.db.NamedExec(query, session)
+	}
 	if err != nil {
-		return fmt.Errorf("Error while creating new session")
+    return fmt.Errorf("Error while creating new session: %w", err)
 	}
 	return nil
 }
 
 func (r *SessionRepo) GetSessionByID(id string) (*domain.Session, error) {
-	const query = "select * from sessions where id=$1"
+	const query = "select * from sessions where id=$1 and valid=true"
 	session := &domain.Session{}
 	err := r.db.Get(session, query, id)
 	if err != nil {
