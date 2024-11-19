@@ -34,7 +34,10 @@ func (r *AuthCodeRepo) Insert(authCode *domain.AuthCode) error {
 }
 
 func (r *AuthCodeRepo) Get(code, generatedFor string) (*domain.AuthCode, error) {
-	const query = `select * from auth_codes where code=$1 and generated_for=$2`
+	const query = `
+    select * from auth_codes where code=$1 and generated_for=$2
+    and used=false LIMIT 1
+  `
 	authCode := &domain.AuthCode{}
 	err := r.db.Get(authCode, query, code, generatedFor)
 	if err != nil {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 
@@ -42,9 +41,72 @@ func NewAuthHandler(
 	}
 }
 
-func (h *AuthHandler) HandleRegistrationRequest(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) HandleVerificationCodeRequest(w http.ResponseWriter, r *http.Request) {
+	phone := r.URL.Query().Get("phone")
+	if phone == "" {
+		utils.WriteError(w, http.StatusBadRequest, nil)
+		return
+	}
+	user, err := h.users.GetByPhone(phone)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		h.logger.Error(err.Error())
+		utils.WriteError(w, http.StatusInternalServerError, nil)
+		return
+	}
+	if user != nil {
+		utils.WriteError(w, http.StatusConflict, nil)
+		return
+	}
+	// send verification message to user
+	code := utils.GenerateRandomDigit()
+	authCode := &domain.AuthCode{
+		Code:         code,
+		Used:         false,
+		GeneratedFor: phone,
+	}
+	err = h.authCodes.Insert(authCode)
+	if err != nil {
+		h.logger.Error(err.Error())
+		utils.WriteError(w, http.StatusInternalServerError, nil)
+		return
+	}
+	message := fmt.Sprintf("Voici votre code de verification: %s\n", code)
+	fmt.Println("Sending verification code to user", message)
+	err = bot.SendMessage(phone, message)
+	if err != nil {
+		h.logger.Error(err.Error())
+		utils.WriteError(w, http.StatusInternalServerError, nil)
+		return
+	}
+	utils.WriteData(w, http.StatusOK, nil)
+}
+
+func (h *AuthHandler) HandleVerificationCodeConfirmation(w http.ResponseWriter, r *http.Request) {
+	phone := r.URL.Query().Get("phone")
+	code := r.URL.Query().Get("code")
+	if phone == "" || code == "" {
+		utils.WriteError(w, http.StatusUnprocessableEntity, "phone or code missing")
+		return
+	}
+	dbCode, err := h.authCodes.Get(code, phone)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		h.logger.Error(err.Error())
+		utils.WriteError(w, http.StatusInternalServerError, nil)
+		return
+	}
+	if dbCode == nil {
+		utils.WriteError(w, http.StatusBadRequest, "invalid_verification_code")
+		return
+	}
+	utils.WriteData(w, http.StatusOK, nil)
+}
+
+func (h *AuthHandler) HandleRegistration(w http.ResponseWriter, r *http.Request) {
 	type dto struct {
-		Phone string `json:"phone"`
+		Phone            string `json:"phone"`
+		VerificationCode string `json:"verification_code"`
+		Username         string `json:"username"`
+		Password         string `json:"password"`
 	}
 	payload := &dto{}
 	err := json.NewDecoder(r.Body).Decode(payload)
@@ -56,153 +118,40 @@ func (h *AuthHandler) HandleRegistrationRequest(w http.ResponseWriter, r *http.R
 		return
 	}
 	if payload.Phone == "" {
-		utils.WriteError(w, http.StatusBadRequest, nil)
+		utils.WriteError(w, http.StatusBadRequest, "invalid_phone")
 		return
 	}
-	user, err := h.users.GetByPhone(payload.Phone)
+	if payload.VerificationCode == "" {
+		utils.WriteError(w, http.StatusBadRequest, "invalid_verification_code")
+		return
+	}
+	if payload.Username == "" {
+		utils.WriteError(w, http.StatusBadRequest, "invalid_username")
+		return
+	}
+	if payload.Password == "" {
+		utils.WriteError(w, http.StatusBadRequest, "invalid_password")
+		return
+	}
+	// check if phone is not already being used
+	exists, err := h.users.Exists(payload.Phone)
+	if err != nil {
+		h.logger.Error(err.Error())
+		utils.WriteError(w, http.StatusInternalServerError, nil)
+		return
+	}
+	if exists {
+		utils.WriteError(w, http.StatusConflict, nil)
+		return
+	}
+	dbCode, err := h.authCodes.Get(payload.VerificationCode, payload.Phone)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		h.logger.Error(err.Error())
 		utils.WriteError(w, http.StatusInternalServerError, nil)
 		return
 	}
-	if user != nil {
-		utils.WriteError(w, http.StatusConflict, nil)
-		return
-	}
-	authCode := &domain.AuthCode{
-		Code:         utils.GenerateRandomDigit(),
-		Used:         false,
-		GeneratedFor: payload.Phone,
-	}
-	message := fmt.Sprintf("Voici votre code de verification: %s", authCode.Code)
-	err = bot.SendMessage(payload.Phone, message)
-	if err != nil {
-		h.logger.Error(err.Error())
-		utils.WriteError(w, http.StatusInternalServerError, nil)
-		return
-	}
-	err = h.authCodes.Insert(authCode)
-	if err != nil {
-		h.logger.Error(err.Error())
-		utils.WriteError(w, http.StatusInternalServerError, nil)
-		return
-	}
-	utils.WriteData(w, http.StatusOK, nil)
-	return
-}
-
-func (h *AuthHandler) HandleAccountVerification(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Query().Get("code")
-	if code == "" {
-		utils.WriteError(w, http.StatusUnprocessableEntity, nil)
-		return
-	}
-	phone := r.URL.Query().Get("phone")
-	if phone == "" {
-		utils.WriteError(w, http.StatusUnprocessableEntity, nil)
-		return
-	}
-	dbCode, err := h.authCodes.Get(code, phone)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			utils.WriteError(w, http.StatusBadRequest, nil)
-			return
-		}
-		h.logger.Error(err.Error())
-		utils.WriteError(w, http.StatusInternalServerError, nil)
-		return
-	}
-	if dbCode.Used {
-		utils.WriteError(w, http.StatusBadRequest, nil)
-		return
-	}
-	err = h.authCodes.SetToUsed(dbCode.ID)
-	if err != nil {
-		h.logger.Error(err.Error())
-	}
-	user := &domain.User{
-		ID:          ulid.Make().String(),
-		Phone:       phone,
-		Username:    phone,
-		Password:    "",
-		AccountType: string(domain.SellerAccountType),
-	}
-	tx, err := h.txProvider.Provide()
-	if err != nil {
-		h.logger.Error(err.Error())
-		utils.WriteError(w, http.StatusBadRequest, nil)
-		return
-	}
-	err = h.users.Insert(tx, user)
-	log.Println("here")
-	if err != nil {
-		h.logger.Error(err.Error())
-		err = tx.Rollback()
-		if err != nil {
-			h.logger.Error(
-				fmt.Sprintf("Error while rolling back  transaction: %s", err.Error()),
-			)
-		}
-		utils.WriteError(w, http.StatusBadRequest, nil)
-		return
-	}
-	log.Println("before creating session")
-	session := &domain.Session{
-		ID:     ulid.Make().String(),
-		Valid:  true,
-		UserID: user.ID,
-	}
-	err = h.sessions.CreateSession(tx, session)
-	if err != nil {
-		h.logger.Error(err.Error())
-		err = tx.Rollback()
-		if err != nil {
-			h.logger.Error(
-				fmt.Sprintf("Error while rolling back  transaction: %s", err.Error()),
-			)
-		}
-		utils.WriteError(w, http.StatusBadRequest, nil)
-		return
-	}
-	log.Println("after creating session")
-	err = tx.Commit()
-	if err != nil {
-		h.logger.Error(fmt.Sprintf("Error while commiting transaction: %s", err.Error()))
-		utils.WriteError(w, http.StatusBadRequest, nil)
-		return
-	}
-	utils.WriteData(w, http.StatusOK, map[string]string{
-		"session": session.ID,
-	})
-}
-
-func (h *AuthHandler) HandleRegistrationCompletion(w http.ResponseWriter, r *http.Request) {
-	type dto struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
-	}
-	payload := &dto{}
-	err := json.NewDecoder(r.Body).Decode(payload)
-	if err != nil {
-		h.logger.Error(
-			fmt.Sprintf("Error while decoding body: %s", err.Error()),
-		)
-		utils.WriteError(w, http.StatusInternalServerError, nil)
-		return
-	}
-	sessionID := r.Header.Get("Authorization")
-	if sessionID == "" {
-		utils.WriteError(w, http.StatusUnauthorized, nil)
-		return
-	}
-	session, err := h.sessions.GetSessionByID(sessionID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			utils.WriteError(w, http.StatusUnauthorized, nil)
-			return
-		}
-		h.logger.Error(err.Error())
-		utils.WriteError(w, http.StatusInternalServerError, nil)
+	if dbCode == nil {
+		utils.WriteError(w, http.StatusBadRequest, "invalid_verification_code")
 		return
 	}
 	hash, err := utils.HashPassword(payload.Password)
@@ -211,17 +160,24 @@ func (h *AuthHandler) HandleRegistrationCompletion(w http.ResponseWriter, r *htt
 		utils.WriteError(w, http.StatusInternalServerError, nil)
 		return
 	}
-	err = h.users.UpdateUser(&domain.User{
-		ID:       session.UserID,
-		Username: payload.Username,
-		Password: hash,
-	})
+	user := &domain.User{
+		ID:          ulid.Make().String(),
+		Phone:       payload.Phone,
+		Username:    payload.Username,
+		Password:    hash,
+		AccountType: string(domain.SellerAccountType),
+	}
+	err = h.users.Insert(nil, user)
 	if err != nil {
 		h.logger.Error(err.Error())
 		utils.WriteError(w, http.StatusInternalServerError, nil)
 		return
 	}
-	utils.WriteData(w, http.StatusOK, nil)
+	err = h.authCodes.SetToUsed(dbCode.ID)
+	if err != nil {
+		h.logger.Error(err.Error())
+	}
+	utils.WriteData(w, http.StatusCreated, nil)
 }
 
 func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -274,9 +230,9 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) RegisterRoutes(r chi.Router) {
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/verify", h.HandleAccountVerification)
-		r.Post("/registration/request", h.HandleRegistrationRequest)
-		r.Post("/registration/complete", h.HandleRegistrationCompletion)
+		r.Get("/verification/request", h.HandleVerificationCodeRequest)
+		r.Get("/verification/confirm", h.HandleVerificationCodeConfirmation)
+		r.Post("/register", h.HandleRegistration)
 		r.Post("/login", h.HandleLogin)
 	})
 }

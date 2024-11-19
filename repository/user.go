@@ -17,6 +17,15 @@ func NewUserRepo(db *sqlx.DB) *UserRepo {
 	return &UserRepo{db}
 }
 
+func (r *UserRepo) Exists(phone string) (bool, error) {
+	count := 0
+	err := r.db.QueryRow("select count(*) from users where phone=$1", phone).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("Error while counting users by phone: %w", err)
+	}
+	return count == 1, nil
+}
+
 func (r *UserRepo) GetByPhone(phone string) (*domain.User, error) {
 	user := &domain.User{}
 	const query = "select * from users where phone=$1"

@@ -38,7 +38,7 @@ func HandleWebhookConfiguration(w http.ResponseWriter, r *http.Request) {
 }
 
 func connectToDB() *sqlx.DB {
-	db, err := sqlx.Open("postgres", os.Getenv("DB_URL"))
+	db, err := sqlx.Connect("postgres", os.Getenv("DB_URL"))
 	if err != nil {
 		panic(err)
 	}
