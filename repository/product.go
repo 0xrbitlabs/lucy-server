@@ -15,6 +15,37 @@ func NewProductRepo(db *sqlx.DB) *ProductRepo {
 	return &ProductRepo{db}
 }
 
+func (r *ProductRepo) GetProductCategoryByLabel(label string) (*domain.ProductCategory, error) {
+	const query = "select * from product_categories where label=$1"
+	data := &domain.ProductCategory{}
+	err := r.db.Get(query, label)
+	if err != nil {
+		return nil, fmt.Errorf("Error while getting product category by label: %w", err)
+	}
+	return data, nil
+}
+
+func (r *ProductRepo) CategoryExists(label string) (bool, error) {
+	count := 0
+	err := r.db.QueryRow("select count(*) from product_categories where label=$1", label).Scan(&count)
+	if err != nil {
+		return false, fmt.Errorf("Error while counting product categories: %w", err)
+	}
+	return count == 1, nil
+}
+
+func (r *ProductRepo) CreateProductCategory(p *domain.ProductCategory) error {
+	const query = `
+    insert into product_categories(label)
+    values(:label)
+  `
+	_, err := r.db.NamedExec(query, p)
+	if err != nil {
+		return fmt.Errorf("Error while inserting product category: %w", err)
+	}
+	return nil
+}
+
 func (r *ProductRepo) GetAllProductCategory() ([]domain.ProductCategory, error) {
 	const query = "select * from product_categories"
 	data := make([]domain.ProductCategory, 0)

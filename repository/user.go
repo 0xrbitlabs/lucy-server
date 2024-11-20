@@ -26,6 +26,19 @@ func (r *UserRepo) Exists(phone string) (bool, error) {
 	return count == 1, nil
 }
 
+func (r *UserRepo) GetByID(id string) (*domain.User, error) {
+	user := &domain.User{}
+	const query = "select * from users where id=$1"
+	err := r.db.Get(user, query, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("Error while getting user by id: %w", err)
+	}
+	return user, nil
+}
+
 func (r *UserRepo) GetByPhone(phone string) (*domain.User, error) {
 	user := &domain.User{}
 	const query = "select * from users where phone=$1"

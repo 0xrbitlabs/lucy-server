@@ -17,26 +17,26 @@ type User struct {
 }
 
 type ProductCategory struct {
-	ID          string `json:"id" db:"id"`
-	Label       string `json:"label" db:"label"`
-	Description string `json:"description" db:"description"`
-	Active      bool   `json:"active" db:"active"`
+	Label string `json:"label" db:"label"`
 }
 
 type Product struct {
 	ID          string  `json:"id" db:"id"`
 	Label       string  `json:"label" db:"label"`
+	Brand       string  `json:"brand" db:"brand"`
 	Category    string  `json:"category" db:"category"`
+	Color       string  `json:"color" db:"color"`
 	Description string  `json:"description" db:"description"`
-	Images      string  `json:"image" db:"images"`
-	Price       float64 `json:"price" db:"price"`
+	Image       string  `json:"image" db:"image"`
 	ListedBy    string  `json:"listed_by" db:"listedby"`
+	Price       float64 `json:"price" db:"price"`
+	Size        string  `json:"size" db:"size"`
 }
 
 type Session struct {
-	ID    string `json:"id" db:"id"`
-	Valid bool `json:"valid" db:"valid"`
-	UserID  string `json:"user_id" db:"user_id"`
+	ID     string `json:"id" db:"id"`
+	Valid  bool   `json:"valid" db:"valid"`
+	UserID string `json:"user_id" db:"user_id"`
 }
 
 type AuthCode struct {

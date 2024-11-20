@@ -7,16 +7,18 @@ create table if not exists users (
 );
 
 create table if not exists product_categories (
-  id text not null primary key,
-  label text not null unique,
-  active boolean not null default true
+  label text not null unique primary key,
 );
 
 create table if not exists products (
   id text not null primary key,
-  label text not null,
+  brand text not null,
   category text not null references product_categories(id),
+  color text not null,
   description text not null,
+  image text not null,
+  label text not null,
+  size text not null,
   price numeric not null,
   listed_by text not null references users(id)
 );
