@@ -7,7 +7,7 @@ create table if not exists users (
 );
 
 create table if not exists product_categories (
-  label text not null unique primary key,
+  label text not null primary key
 );
 
 create table if not exists products (
