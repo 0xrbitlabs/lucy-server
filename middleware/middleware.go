@@ -61,6 +61,19 @@ func (m *AuthMiddleware) Authenticate(roles ...string) func(http.Handler) http.H
 				utils.WriteError(w, http.StatusInternalServerError, nil)
 				return
 			}
+			if len(roles) > 0 {
+				hasRole := false
+				for _, role := range roles {
+					if role == user.AccountType {
+						hasRole = true
+						break
+					}
+				}
+				if !hasRole {
+					utils.WriteError(w, http.StatusUnauthorized, nil)
+					return
+				}
+			}
 			ctx := context.WithValue(r.Context(), "user", user)
 			h.ServeHTTP(w, r.WithContext(ctx))
 		})

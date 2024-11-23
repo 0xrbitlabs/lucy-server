@@ -12,6 +12,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	"github.com/joseph0x45/lucy/handlers"
+	m "github.com/joseph0x45/lucy/middleware"
 	"github.com/joseph0x45/lucy/providers"
 	"github.com/joseph0x45/lucy/repository"
 	whatsapptypes "github.com/joseph0x45/lucy/whatsapp_types"
@@ -58,19 +59,27 @@ func main() {
 
 	db := connectToDB()
 
-  txProvider := providers.NewTxProvider(db) 
+	txProvider := providers.NewTxProvider(db)
 
 	userRepo := repository.NewUserRepo(db)
 	sessionRepo := repository.NewSessionRepo(db)
-	// productRepo := repository.NewProductRepo(db)
+	productRepo := repository.NewProductRepo(db)
 	authCodeRepo := repository.NewAuthCodeRepo(db)
+
+	authMiddleware := m.NewAuthMiddleware(userRepo, sessionRepo, logger)
 
 	authHandler := handlers.NewAuthHandler(
 		userRepo,
 		sessionRepo,
 		logger,
 		authCodeRepo,
-    txProvider,
+		txProvider,
+	)
+
+	productHandler := handlers.NewProductHandler(
+		authMiddleware,
+		logger,
+		productRepo,
 	)
 
 	port := os.Getenv("PORT")
@@ -97,6 +106,7 @@ func main() {
 	})
 
 	authHandler.RegisterRoutes(r)
+  productHandler.RegisterRoutes(r)
 
 	// TODO: Make this better
 	log.Println("Started server on port", port)
