@@ -31,6 +31,7 @@ func NewAuthHandler(
 }
 
 func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
+  w.Header().Set("Content-Type", "application/json")
 	payload := struct {
 		PhoneNumber string `json:"phone_number"`
 		Password    string `json:"password"`
@@ -49,12 +50,12 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	if user == nil {
 		w.WriteHeader(http.StatusNotFound)
-		utils.WriteError("User not found", w)
+		utils.WriteError("user_not_found", w)
 		return
 	}
 	if !utils.PasswordMatchesHash(payload.Password, user.Password) {
 		w.WriteHeader(http.StatusBadRequest)
-		utils.WriteError("Wrong password", w)
+		utils.WriteError("wrong_password", w)
 		return
 	}
 	session := &models.Session{

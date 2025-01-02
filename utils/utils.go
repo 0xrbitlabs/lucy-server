@@ -8,7 +8,7 @@ import (
 )
 
 func PasswordMatchesHash(password, hash string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
+  return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }
 
 type err struct {
