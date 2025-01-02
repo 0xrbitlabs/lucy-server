@@ -1,6 +1,10 @@
 include .env
 
 DB_PORT ?= 5432
+BINARY=lucy.out
+
+build:
+	go build -o $(BINARY) .
 
 up-db: down-db
 	@docker run --name=$(DB_CONTAINER_NAME) -e POSTGRES_PASSWORD=$(DB_PASSWORD) -e POSTGRES_DB=$(DB_NAME) -itd -p 5432:$(DB_PORT) postgres:latest
