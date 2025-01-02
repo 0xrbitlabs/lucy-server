@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"lucy/models"
 
@@ -29,4 +31,16 @@ func (r *SessionRepo) Insert(session *models.Session) error {
 		return fmt.Errorf("Error while inserting session: %w", err)
 	}
 	return nil
+}
+
+func (r *SessionRepo) GetSessionByID(id string) (*models.Session, error) {
+	session := &models.Session{}
+	err := r.db.Get(session, "select * from sessions where id=$1 and valid=true")
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Error while getting session by ID: %w", err)
+	}
+	return session, nil
 }

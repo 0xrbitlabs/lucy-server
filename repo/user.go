@@ -28,3 +28,15 @@ func (r *UserRepo) GetUserByPhoneNumber(phoneNumber string) (*models.User, error
 	}
 	return user, nil
 }
+
+func (r *UserRepo) GetUserByID(id string) (*models.User, error) {
+	user := &models.User{}
+	err := r.db.Get(user, "select * from users where id=$1")
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Error while getting user by ID: %w", err)
+	}
+	return user, nil
+}
