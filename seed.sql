@@ -14,4 +14,5 @@ VALUES
   (
     '3', 'seller_user', '+1122334455', 'sellerPass789',
     'seller', '2025-01-02 12:10:00'
-  );
+  )
+ON CONFLICT DO NOTHING;
