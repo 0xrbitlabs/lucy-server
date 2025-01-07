@@ -5,7 +5,7 @@
 - [x] Admin can create product category
 - [x] Admin can view all product categories
 # 2025-01-07
-- [ ] Bot replies to first user interaction with Welcome message
+- [x] Bot replies to first user interaction with Welcome message
 - [ ] Register as seller
 - [ ] Admin can view list of all users
 - [ ] Admin can delete a product category
