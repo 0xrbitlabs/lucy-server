@@ -27,3 +27,6 @@ migrate:
 seed:
 	@docker cp ./seed.sql $(DB_CONTAINER_NAME):/tmp/seed.sql
 	@docker exec -it $(DB_CONTAINER_NAME) psql -U postgres -d $(DB_NAME) -f /tmp/seed.sql
+
+ngrok:
+	@ngrok http --url=trusty-serval-master.ngrok-free.app 8080

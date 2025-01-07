@@ -35,7 +35,8 @@ func (r *SessionRepo) Insert(session *models.Session) error {
 
 func (r *SessionRepo) GetSessionByID(id string) (*models.Session, error) {
 	session := &models.Session{}
-	err := r.db.Get(session, "select * from sessions where id=$1 and valid=true")
+	const query = "select * from sessions where id=$1 and valid=true"
+	err := r.db.Get(session, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil

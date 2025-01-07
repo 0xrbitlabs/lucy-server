@@ -5,7 +5,9 @@ import (
 	"log"
 	"log/slog"
 	"lucy/handlers"
+	"lucy/middlewares"
 	"lucy/repo"
+	"lucy/whatsapp"
 	"net/http"
 	"os"
 	"time"
@@ -45,12 +47,30 @@ func main() {
 	//repos
 	userRepo := repo.NewUserRepo(db)
 	sessionRepo := repo.NewSessionRepo(db)
+	productCategoryRepo := repo.NewProductCategoryRepo(db)
 
-	//handles
+	//handlers
 	authHandler := handlers.NewAuthHandler(
 		logger,
 		userRepo,
 		sessionRepo,
+	)
+	productCategoryHandler := handlers.NewProductCategoryHandler(
+		productCategoryRepo,
+		logger,
+	)
+
+	//clients
+	accessToken := os.Getenv("ACCESS_TOKEN")
+	phoneNumberID := os.Getenv("PHONE_NUMBER_ID")
+	whatsappClient := whatsapp.NewClient(accessToken, phoneNumberID)
+	botHandler := handlers.NewBotHandler(whatsappClient, logger, userRepo)
+
+	//middlewares
+	authMiddleware := middlewares.NewAuthMiddleware(
+		userRepo,
+		sessionRepo,
+		logger,
 	)
 
 	r := chi.NewRouter()
@@ -66,6 +86,8 @@ func main() {
 	})
 
 	authHandler.RegisterRoutes(r)
+	productCategoryHandler.RegisterRoutes(r, authMiddleware)
+	botHandler.RegisterRoutes(r)
 
 	server := http.Server{}
 	server.Handler = r

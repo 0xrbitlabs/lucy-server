@@ -66,7 +66,7 @@ func (m *AuthMiddleware) AuthenticateWithRole(roles ...string) func(http.Handler
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			if len(roles) > 0 && !!userHasRole(user.AccountType) {
+			if len(roles) > 0 && !userHasRole(user.AccountType) {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

@@ -1,6 +1,6 @@
 INSERT INTO users (
   id, username, phone_number,
-  password, user_type, created_at
+  password, account_type, created_at
 )
 VALUES
   ('1', 'admin_user', '+1234567890', 'password123', 'admin', '2025-01-02 12:00:00'),

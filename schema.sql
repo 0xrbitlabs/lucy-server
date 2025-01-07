@@ -3,7 +3,7 @@ create table if not exists users (
   username text not null,
   phone_number text not null,
   password text not null,
-  user_type text not null, -- can be either 'admin', 'regular' or 'seller'
+  account_type text not null, -- can be either 'admin', 'regular' or 'seller'
   created_at timestamp not null
 );
 

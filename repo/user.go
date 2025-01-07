@@ -17,9 +17,28 @@ func NewUserRepo(db *sqlx.DB) *UserRepo {
 	return &UserRepo{db}
 }
 
+func (r *UserRepo) Insert(user *models.User) error {
+	const query = `
+    insert into users(
+      id, username, phone_number,
+      password, created_at, account_type
+    )
+    values (
+      :id, :username, :phone_number,
+      :password, :created_at, :account_type
+    )
+  `
+	_, err := r.db.NamedExec(query, user)
+	if err != nil {
+		return fmt.Errorf("Error while inserting user: %w", err)
+	}
+	return nil
+}
+
 func (r *UserRepo) GetUserByPhoneNumber(phoneNumber string) (*models.User, error) {
 	user := &models.User{}
-	err := r.db.Get(user, "select * from users where phone_number=$1", phoneNumber)
+	const query = "select * from users where phone_number=$1"
+	err := r.db.Get(user, query, phoneNumber)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -31,7 +50,8 @@ func (r *UserRepo) GetUserByPhoneNumber(phoneNumber string) (*models.User, error
 
 func (r *UserRepo) GetUserByID(id string) (*models.User, error) {
 	user := &models.User{}
-	err := r.db.Get(user, "select * from users where id=$1")
+	const query = "select * from users where id=$1"
+	err := r.db.Get(user, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
