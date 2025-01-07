@@ -31,12 +31,10 @@ func main() {
 	}
 	port := fmt.Sprintf(":%s", os.Getenv("PORT"))
 
-	//logger
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	}))
 
-	//db
 	db, err := getDBConnectionPool()
 	if err != nil {
 		logger.Error("Failed to connect to database", slog.Any("err", err))
@@ -44,12 +42,10 @@ func main() {
 	}
 	log.Println("Connected to Database!")
 
-	//repos
 	userRepo := repo.NewUserRepo(db)
 	sessionRepo := repo.NewSessionRepo(db)
 	productCategoryRepo := repo.NewProductCategoryRepo(db)
 
-	//handlers
 	authHandler := handlers.NewAuthHandler(
 		logger,
 		userRepo,
@@ -60,13 +56,11 @@ func main() {
 		logger,
 	)
 
-	//clients
 	accessToken := os.Getenv("ACCESS_TOKEN")
 	phoneNumberID := os.Getenv("PHONE_NUMBER_ID")
 	whatsappClient := whatsapp.NewClient(accessToken, phoneNumberID)
 	botHandler := handlers.NewBotHandler(whatsappClient, logger, userRepo)
 
-	//middlewares
 	authMiddleware := middlewares.NewAuthMiddleware(
 		userRepo,
 		sessionRepo,
@@ -75,7 +69,6 @@ func main() {
 
 	r := chi.NewRouter()
 
-	//middlewares
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
