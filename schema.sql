@@ -19,3 +19,11 @@ create table if not exists product_categories (
   description text not null,
   created_at timestamp not null
 );
+
+create table if not exists verification_codes (
+  id serial not null primary key,
+  code text not null,
+  generated_for text not null references users(id),
+  generated_at timestamp not null,
+  used boolean not null default false
+);

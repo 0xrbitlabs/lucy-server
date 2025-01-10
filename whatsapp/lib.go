@@ -49,12 +49,35 @@ func (c *Client) SendBasicMessage(recipient, message string) error {
 	if err != nil {
 		return fmt.Errorf("Error while sending basic message: Failed to send HTTP request: %w", err)
 	}
-  responseBody, err := io.ReadAll(response.Body)
-  if err!= nil {
-    return fmt.Errorf("Error while sending basic message: Failed to read response body: %w", err)
-  }
-  fmt.Println(string(responseBody))
-  fmt.Println(response.Status)
-  response.Body.Close()
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("Error while sending basic message: Failed to read response body: %w", err)
+	}
+	fmt.Println(string(responseBody))
+	fmt.Println(response.Status)
+	response.Body.Close()
+	return nil
+}
+
+func (c *Client) SendVerificationCodeMessage(to, code string) error {
+	payload := map[string]interface{}{
+		"messaging_product": "whatsapp",
+		"recipient_type":    "individual",
+		"to":                to,
+		"type":              "template",
+		"template": map[string]interface{}{
+			"name":     "",
+			"language": "fr",
+		},
+		"components": map[string]interface{}{
+			"type": "body",
+			"parameters": []map[string]interface{}{
+				map[string]interface{}{
+					"type": "text",
+					"code": code,
+				},
+			},
+		},
+	}
 	return nil
 }

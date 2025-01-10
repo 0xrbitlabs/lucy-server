@@ -45,21 +45,25 @@ func main() {
 	userRepo := repo.NewUserRepo(db)
 	sessionRepo := repo.NewSessionRepo(db)
 	productCategoryRepo := repo.NewProductCategoryRepo(db)
+	verificationCodeRepo := repo.NewVerificationCodeRepo(db)
+
+  accessToken := os.Getenv("ACCESS_TOKEN")
+  phoneNumberID := os.Getenv("PHONE_NUMBER_ID")
+  whatsappClient := whatsapp.NewClient(accessToken, phoneNumberID)
+  botHandler := handlers.NewBotHandler(whatsappClient, logger, userRepo)
 
 	authHandler := handlers.NewAuthHandler(
 		logger,
 		userRepo,
 		sessionRepo,
+		verificationCodeRepo,
+    whatsappClient,
 	)
 	productCategoryHandler := handlers.NewProductCategoryHandler(
 		productCategoryRepo,
 		logger,
 	)
 
-	accessToken := os.Getenv("ACCESS_TOKEN")
-	phoneNumberID := os.Getenv("PHONE_NUMBER_ID")
-	whatsappClient := whatsapp.NewClient(accessToken, phoneNumberID)
-	botHandler := handlers.NewBotHandler(whatsappClient, logger, userRepo)
 
 	authMiddleware := middlewares.NewAuthMiddleware(
 		userRepo,
@@ -78,7 +82,7 @@ func main() {
 		w.Write([]byte("Everything is good :)\n"))
 	})
 
-	authHandler.RegisterRoutes(r)
+	authHandler.RegisterRoutes(r, authMiddleware)
 	productCategoryHandler.RegisterRoutes(r, authMiddleware)
 	botHandler.RegisterRoutes(r)
 
