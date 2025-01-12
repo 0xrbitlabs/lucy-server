@@ -91,11 +91,140 @@ func (h *ProductCategoryHandler) GetAll(w http.ResponseWriter, r *http.Request) 
 	}, w)
 }
 
+func (h *ProductCategoryHandler) RequestProductCategoryCreation(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	currentUser, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	payload := &struct {
+		Label       string `json:"label"`
+		Description string `json:"description"`
+	}{}
+	err := json.NewDecoder(r.Body).Decode(payload)
+	if err != nil {
+		h.logger.Error("Error while decoding payload body:", slog.Any("err", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if payload.Description == "" || payload.Label == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		utils.WriteError("label_or_description_empty", w)
+		return
+	}
+	ok, err = h.productCategories.LabelIsUnique(payload.Label)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if !ok {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+	req := &models.ProductCategoryCreationRequest{
+		ID:          ulid.Make().String(),
+		Requester:   currentUser.ID,
+		Label:       payload.Label,
+		Description: payload.Description,
+		Status:      "pending",
+	}
+	err = h.productCategories.InsertCreationRequest(req)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *ProductCategoryHandler) ViewProductCategoryCreationRequests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	currentUser, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	data, err := h.productCategories.GetAllProductCategoryCreationRequestsByUserAccountType(currentUser)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	utils.WriteData(map[string]interface{}{
+		"data": data,
+	}, w)
+}
+
+func (h *ProductCategoryHandler) RejectProductCategoryCreationRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	reqID := chi.URLParam(r, "id")
+	err := h.productCategories.SetRequestStatus(reqID, "rejected")
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *ProductCategoryHandler) GrantProductCategoryCreationRequest(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	_, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	reqID := chi.URLParam(r, "id")
+	req, err := h.productCategories.GetProductCategoryCreationRequestByID(reqID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if req == nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	pc := &models.ProductCategory{
+		ID:          ulid.Make().String(),
+		Label:       req.Label,
+		Description: req.Description,
+		CreatedAt:   time.Now(),
+	}
+	err = h.productCategories.Insert(pc)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = h.productCategories.SetRequestStatus(reqID, "granted")
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+  w.WriteHeader(http.StatusOK)
+}
+
 func (h *ProductCategoryHandler) RegisterRoutes(r chi.Router, m *middlewares.AuthMiddleware) {
-	adminOnlyAuth := m.AuthenticateWithRole("admin")
-	auth := m.AuthenticateWithRole()
+	adminOnlyAuth := m.AuthenticateWithRole(true, "admin")
+	sellerAuth := m.AuthenticateWithRole(true, "seller")
+	auth := m.AuthenticateWithRole(true)
 	r.Route("/categories", func(r chi.Router) {
 		r.With(adminOnlyAuth).Post("/", h.CreateProductCategory)
 		r.With(auth).Get("/", h.GetAll)
+		r.Route("/requests", func(r chi.Router) {
+			r.With(sellerAuth).Post("/", h.RequestProductCategoryCreation)
+			r.With(auth).Get("/", h.ViewProductCategoryCreationRequests)
+			r.With(auth).Delete("/{id}", h.RejectProductCategoryCreationRequest)
+			r.With(auth).Post("/{id}", h.GrantProductCategoryCreationRequest)
+		})
 	})
 }

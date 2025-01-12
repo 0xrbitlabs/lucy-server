@@ -38,7 +38,7 @@ func userHasRole(userRole string) bool {
 	return ok
 }
 
-func (m *AuthMiddleware) AuthenticateWithRole(roles ...string) func(http.Handler) http.Handler {
+func (m *AuthMiddleware) AuthenticateWithRole(checkVerificationRole bool, roles ...string) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			sessionID := r.Header.Get("Authorization")
@@ -67,6 +67,10 @@ func (m *AuthMiddleware) AuthenticateWithRole(roles ...string) func(http.Handler
 				return
 			}
 			if len(roles) > 0 && !userHasRole(user.AccountType) {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			if !checkVerificationRole && user.Verified {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

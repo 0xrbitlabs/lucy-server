@@ -76,3 +76,57 @@ func (r *ProductCategoryRepo) LabelIsUnique(label string) (bool, error) {
 	}
 	return pc == nil, nil
 }
+
+func (r *ProductCategoryRepo) InsertCreationRequest(req *models.ProductCategoryCreationRequest) error {
+	const query = `
+    insert into product_category_creation_requests (
+      id, requester, label, description
+    )
+    values (
+      :id, :requester, :label, :description
+    )
+  `
+	_, err := r.db.NamedExec(query, req)
+	if err != nil {
+		return fmt.Errorf("Error while inserting request creation: %w", err)
+	}
+	return nil
+}
+
+func (r *ProductCategoryRepo) GetAllProductCategoryCreationRequestsByUserAccountType(
+	user *models.User,
+) ([]models.ProductCategoryCreationRequest, error) {
+	data := make([]models.ProductCategoryCreationRequest, 0)
+	var err error
+	if user.AccountType == "seller" {
+		err = r.db.Select(&data, "select * from product_category_creation_requests where requester=$1", user.ID)
+	} else {
+		err = r.db.Select(&data, "select * from product_category_creation_requests")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("Error while getting product category creation requests: %w", err)
+	}
+	return data, nil
+}
+
+func (r *ProductCategoryRepo) SetRequestStatus(id, status string) error {
+	const query = "update product_category_creation_requests set status='$2' where id=$1"
+	_, err := r.db.Exec(query, id, status)
+	if err != nil {
+		return fmt.Errorf("Error while setting request status to rejected: %w", err)
+	}
+	return nil
+}
+
+func (r *ProductCategoryRepo) GetProductCategoryCreationRequestByID(id string) (*models.ProductCategoryCreationRequest, error) {
+	const query = "select * from product_category_creation_requests where id=$1"
+	req := &models.ProductCategoryCreationRequest{}
+	err := r.db.Get(req, query, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("Error while getting product category creation request by id: %w", err)
+	}
+	return req, nil
+}

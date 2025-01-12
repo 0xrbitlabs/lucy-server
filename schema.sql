@@ -28,3 +28,11 @@ create table if not exists verification_codes (
   generated_at timestamp not null,
   used boolean not null default false
 );
+
+create table if not exists product_category_creation_requests (
+  id text not null primary key,
+  requester text not null references users(id),
+  label text not null,
+  description text not null,
+  status text not null default 'pending' -- can be either 'pending', 'rejected' or 'granted'
+);

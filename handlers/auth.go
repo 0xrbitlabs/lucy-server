@@ -214,7 +214,7 @@ func (h *AuthHandler) CompleteProfileVerification(w http.ResponseWriter, r *http
 }
 
 func (h *AuthHandler) RegisterRoutes(r chi.Router, m *middlewares.AuthMiddleware) {
-	auth := m.AuthenticateWithRole()
+	auth := m.AuthenticateWithRole(false)
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/login", h.HandleLogin)
 		r.Post("/register", h.RegisterAsSeller)
