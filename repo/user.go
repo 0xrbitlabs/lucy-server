@@ -60,3 +60,12 @@ func (r *UserRepo) GetUserByID(id string) (*models.User, error) {
 	}
 	return user, nil
 }
+
+func (r *UserRepo) SetToVerified(id string) error {
+	const query = "update users set verified=true where id=$1"
+	_, err := r.db.Exec(query, id)
+	if err != nil {
+		return fmt.Errorf("Error while setting user to verified: %w", err)
+	}
+	return nil
+}

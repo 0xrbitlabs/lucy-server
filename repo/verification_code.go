@@ -1,6 +1,8 @@
 package repo
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"lucy/models"
 
@@ -47,6 +49,9 @@ func (r *VerificationCodeRepo) GetByCode(code, userID string) (*models.Verificat
   `
 	err := r.db.Get(vc, query, code, userID)
 	if err != nil {
+    if errors.Is(err, sql.ErrNoRows){
+      return nil, nil
+    }
 		return nil, fmt.Errorf("Error while getting verification code: %w", err)
 	}
 	return vc, nil

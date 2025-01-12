@@ -9,4 +9,5 @@ type User struct {
 	Password    string    `json:"password" db:"password"`
 	AccountType string    `json:"account_type" db:"account_type"`
 	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+	Verified    bool      `json:"verified" db:"verified"`
 }

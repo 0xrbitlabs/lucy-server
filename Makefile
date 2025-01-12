@@ -8,6 +8,8 @@ build:
 
 up-db: down-db
 	@docker run --name=$(DB_CONTAINER_NAME) -e POSTGRES_PASSWORD=$(DB_PASSWORD) -e POSTGRES_DB=$(DB_NAME) -itd -p 5432:$(DB_PORT) postgres:latest
+	$(MAKE) migrate
+	$(MAKE) seed
 
 down-db:
 	@docker stop $(DB_CONTAINER_NAME) && docker rm $(DB_CONTAINER_NAME) || true

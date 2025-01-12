@@ -106,7 +106,7 @@ func (c *Client) SendVerificationCodeMessage(to, code string) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken))
 	client := &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 15,
 	}
 	response, err := client.Do(req)
 	if err != nil {
@@ -116,8 +116,8 @@ func (c *Client) SendVerificationCodeMessage(to, code string) error {
 	if err != nil {
 		return fmt.Errorf("Error while sending template message: Failed to read response body: %w", err)
 	}
-	fmt.Println(string(responseBody))
-	fmt.Println(response.Status)
+  debugStr := fmt.Sprintf("[DEBUG]: %s %s", string(responseBody), response.Status)
+	fmt.Println(debugStr)
 	response.Body.Close()
 	return nil
 }

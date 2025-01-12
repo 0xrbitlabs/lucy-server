@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"log/slog"
 	"lucy/middlewares"
 	"lucy/models"
@@ -151,7 +149,6 @@ func (h *AuthHandler) RegisterAsSeller(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) RequestProfileVerificationCode(w http.ResponseWriter, r *http.Request) {
-	log.Println("came here")
 	w.Header().Set("Content-Type", "application/json")
 	currentUser, ok := r.Context().Value("user").(*models.User)
 	if !ok {
@@ -170,24 +167,58 @@ func (h *AuthHandler) RequestProfileVerificationCode(w http.ResponseWriter, r *h
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	message := fmt.Sprintf("Votre code de verification est le %s", verificationCode.Code)
-	err = h.whatsappClient.SendVerificationCodeMessage(currentUser.PhoneNumber, message)
+	err = h.whatsappClient.SendVerificationCodeMessage(currentUser.PhoneNumber, verificationCode.Code)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	return
 }
 
-func (h *AuthHandler) VerifyProfile(w http.ResponseWriter, r *http.Request) {}
+func (h *AuthHandler) CompleteProfileVerification(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	currentUser, ok := r.Context().Value("user").(*models.User)
+	if !ok {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	code := r.URL.Query().Get("code")
+	dbCode, err := h.verificationCodes.GetByCode(code, currentUser.ID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if dbCode == nil {
+    w.WriteHeader(http.StatusBadRequest)
+    utils.WriteError("invalid_code", w)
+		return
+	}
+	if time.Now().After(dbCode.GeneratedAt.Add(time.Minute * 15)) {
+    w.WriteHeader(http.StatusBadRequest)
+    utils.WriteError("code_expired", w)
+		return
+	}
+	err = h.users.SetToVerified(currentUser.ID)
+	if err != nil {
+		h.logger.Error(err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = h.verificationCodes.SetToUsed(dbCode.ID)
+	if err != nil {
+		h.logger.Error(err.Error())
+	}
+  w.WriteHeader(http.StatusOK)
+}
 
 func (h *AuthHandler) RegisterRoutes(r chi.Router, m *middlewares.AuthMiddleware) {
-  auth := m.AuthenticateWithRole()
+	auth := m.AuthenticateWithRole()
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/login", h.HandleLogin)
 		r.Post("/register", h.RegisterAsSeller)
-		r.With(auth).Post("/verify", h.RequestProfileVerificationCode)
+		r.With(auth).Post("/verification/request", h.RequestProfileVerificationCode)
+		r.With(auth).Post("/verification/complete", h.CompleteProfileVerification)
 	})
 }
