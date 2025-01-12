@@ -171,7 +171,7 @@ func (h *AuthHandler) RequestProfileVerificationCode(w http.ResponseWriter, r *h
 		return
 	}
 	message := fmt.Sprintf("Votre code de verification est le %s", verificationCode.Code)
-	err = h.whatsappClient.SendBasicMessage(currentUser.PhoneNumber, message)
+	err = h.whatsappClient.SendVerificationCodeMessage(currentUser.PhoneNumber, message)
 	if err != nil {
 		h.logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
