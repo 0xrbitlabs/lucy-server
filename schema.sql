@@ -4,7 +4,8 @@ create table if not exists users (
   phone_number text not null,
   password text not null,
   account_type text not null, -- can be either 'admin', 'regular' or 'seller'
-  created_at timestamp not null
+  created_at timestamp not null,
+  verified boolean not null default false
 );
 
 create table if not exists sessions (
