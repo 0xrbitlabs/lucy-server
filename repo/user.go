@@ -69,3 +69,13 @@ func (r *UserRepo) SetToVerified(id string) error {
 	}
 	return nil
 }
+
+func (r *UserRepo) GetAll() ([]models.User, error) {
+	const query = "select * from users"
+	data := make([]models.User, 0)
+	err := r.db.Select(&data, query)
+	if err != nil {
+		return nil, fmt.Errorf("Error while getting users: %w", err)
+	}
+	return data, nil
+}
