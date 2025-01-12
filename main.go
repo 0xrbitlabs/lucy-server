@@ -47,23 +47,22 @@ func main() {
 	productCategoryRepo := repo.NewProductCategoryRepo(db)
 	verificationCodeRepo := repo.NewVerificationCodeRepo(db)
 
-  accessToken := os.Getenv("ACCESS_TOKEN")
-  phoneNumberID := os.Getenv("PHONE_NUMBER_ID")
-  whatsappClient := whatsapp.NewClient(accessToken, phoneNumberID)
-  botHandler := handlers.NewBotHandler(whatsappClient, logger, userRepo)
+	accessToken := os.Getenv("ACCESS_TOKEN")
+	phoneNumberID := os.Getenv("PHONE_NUMBER_ID")
+	whatsappClient := whatsapp.NewClient(accessToken, phoneNumberID)
+	botHandler := handlers.NewBotHandler(whatsappClient, logger, userRepo)
 
 	authHandler := handlers.NewAuthHandler(
 		logger,
 		userRepo,
 		sessionRepo,
 		verificationCodeRepo,
-    whatsappClient,
+		whatsappClient,
 	)
 	productCategoryHandler := handlers.NewProductCategoryHandler(
 		productCategoryRepo,
 		logger,
 	)
-
 
 	authMiddleware := middlewares.NewAuthMiddleware(
 		userRepo,
@@ -85,6 +84,25 @@ func main() {
 	authHandler.RegisterRoutes(r, authMiddleware)
 	productCategoryHandler.RegisterRoutes(r, authMiddleware)
 	botHandler.RegisterRoutes(r)
+	r.Route("/test", func(r chi.Router) {
+		to := "22892423146"
+		code := "101010"
+		r.Get("/send-basic-message", func(w http.ResponseWriter, r *http.Request) {
+			err := whatsappClient.SendBasicMessage(to, code)
+			if err != nil {
+				logger.Error(err.Error())
+			}
+			w.WriteHeader(http.StatusOK)
+		})
+		r.Get("/send-template", func(w http.ResponseWriter, r *http.Request) {
+      whatsappClient.SendVerificationCodeMessage(to, code)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			w.WriteHeader(http.StatusOK)
+			return
+		})
+	})
 
 	server := http.Server{}
 	server.Handler = r
