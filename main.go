@@ -63,6 +63,10 @@ func main() {
 		productCategoryRepo,
 		logger,
 	)
+  usersHandler := handlers.NewUserHandler(
+    userRepo,
+    logger,
+  )
 
 	authMiddleware := middlewares.NewAuthMiddleware(
 		userRepo,
@@ -84,6 +88,7 @@ func main() {
 	authHandler.RegisterRoutes(r, authMiddleware)
 	productCategoryHandler.RegisterRoutes(r, authMiddleware)
 	botHandler.RegisterRoutes(r)
+  usersHandler.RegisterRoutes(r, authMiddleware)
 	r.Route("/test", func(r chi.Router) {
 		to := "22892423146"
 		code := "101010"
