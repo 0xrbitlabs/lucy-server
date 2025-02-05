@@ -8,6 +8,13 @@ build:
 
 up-db: down-db
 	@docker run --name=$(DB_CONTAINER_NAME) -e POSTGRES_PASSWORD=$(DB_PASSWORD) -e POSTGRES_DB=$(DB_NAME) -itd -p 5432:$(DB_PORT) postgres:latest
+	@echo "Waiting 3 seconds before running migrations"
+	@echo 3
+	@sleep 1
+	@echo 2
+	@sleep 1
+	@echo 1
+	@sleep 1
 	$(MAKE) migrate
 	$(MAKE) seed
 
