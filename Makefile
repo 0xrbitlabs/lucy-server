@@ -1,3 +1,5 @@
+.PHONY: setup-env .env
+
 include .env
 
 DB_PORT ?= 5432
@@ -39,3 +41,6 @@ seed:
 
 ngrok:
 	@ngrok http --url=trusty-serval-master.ngrok-free.app 8080
+
+setup-env:
+	cp ./.env.example ./.env
